@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="sjy">
+    <sql id="pagingStart">
+        <if test='hiddenNm != "hidden"'>
+            SELECT *
+            FROM (
+        </if>
+    </sql>
+    <sql id="pagingEnd">
+        <if test='hiddenNm != "hidden"'>
+            ) A
+            WHERE CEIL(A.RN/NVL(#{record_count_per_page},10)) = NVL(#{pageNo},1)
+        </if>
+    </sql>
+    
+    <select id="userList" parameterType="hashmap" resultType="egovMap">
+        SELECT USER_ID
+        , USER_NM
+        , USER_PW
+        FROM REGIST_STUDY
+    </select>
+    
+    <select id="userLogin" parameterType="hashmap" resultType="egovMap">
+        SELECT USER_ID
+        , USER_NM
+        , USER_PW
+        FROM REGIST_STUDY
+        WHERE USER_ID = #{id}
+        AND USER_PW = #{pwd}
+    </select>
+    
+    <select id="pwdCheck" parameterType="hashmap" resultType="egovMap">
+        SELECT USER_ID
+        , USER_NM
+        , USER_PW
+        , USER_PN
+        , USER_ADR
+        , USER_EM
+        FROM REGIST_STUDY
+        WHERE USER_ID = #{id}
+        AND USER_PW = #{pwd}
+    </select>
+    
+    <update id="updateId">
+        UPDATE REGIST_STUDY
+        SET USER_ID = #{fixId}
+        , USER_NM = #{name}
+        , USER_PW = #{pwd}
+        , USER_PN = #{phonenum}
+        , USER_ADR = #{address}
+        , USER_EM = #{email}
+        WHERE USER_ID = #{fixId}
+    </update>
+    
+    <select id="deleteId" parameterType="hashmap">
+		DELETE FROM REGIST_STUDY
+		WHERE USER_ID = #{id}
+	</select>
+    
+    <select id="crossCount" parameterType="hashmap" resultType="int">
+        SELECT COUNT(1)
+        FROM CROSS_STUDY
+        WHERE 1=1
+    </select>
+    
+    <select id="crossList" parameterType="hashmap" resultType="egovMap">
+        <include refid="pagingStart" />
+        SELECT CROSS_ID
+        	, CROSS_NM
+        	, CROSS_NO
+        	, GIS_POSX
+        	, GIS_POSY
+        	, USE_YN
+        	, ROW_NUMBER() OVER(ORDER BY CROSS_ID) AS RN
+        FROM CROSS_STUDY
+        WHERE 1=1
+        <include refid="pagingEnd" />
+    </select>
+    
+    <select id="clickList" parameterType="hashmap" resultType="egovMap">
+        SELECT CROSS_ID
+        , CROSS_NM
+        , CROSS_NO
+        , GIS_POSX
+        , GIS_POSY
+        , USE_YN
+        FROM CROSS_STUDY
+        WHERE CROSS_ID = '${click}'
+    </select>
+    
+    <insert id="crossInsert" parameterType="hashmap">
+        INSERT INTO CROSS_STUDY(
+        	CROSS_ID
+        	, CROSS_NM
+        	, CROSS_NO
+        	, GIS_POSX
+        	, GIS_POSY
+        	, USE_YN
+        )
+        VALUES(
+        	#{insertId}, #{insertNm}, #{insertNo}, #{insertX}, #{insertY}, #{insertYn}
+        )
+    </insert>
+    
+    <update id="crossFormUpdate">
+        UPDATE CROSS_STUDY
+        SET CROSS_ID = #{id}
+        , CROSS_NM = #{updateNm}
+        , CROSS_NO = #{updateNo}
+        , GIS_POSX = #{updateX}
+        , GIS_POSY = #{updateY}
+        , USE_YN = #{updateYn}
+        WHERE CROSS_ID = #{id}
+    </update>
+    
+    <select id="crossFormDelete" parameterType="hashmap">
+		DELETE FROM CROSS_STUDY
+		WHERE CROSS_ID = #{chkYn}
+	</select>
+	
+    <insert id="registId">
+        INSERT INTO REGIST_STUDY(
+        	USER_ID
+        	, USER_NM
+        	, USER_PW
+        	, USER_PN
+        	, USER_ADR
+        	, USER_EM
+        )
+        VALUES(
+        	#{id}, #{name}, #{pwd}, #{phonenum}, #{address}, #{email}
+        )
+    </insert>
+    
+</mapper>

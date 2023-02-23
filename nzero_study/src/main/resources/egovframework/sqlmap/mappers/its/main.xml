@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="main">
+	<select id="selectCctvList" resultType="egovMap">
+		SELECT A.*
+			 , CASE WHEN (SYSDATE-B.COLL_DT) * 60 * 1440 <![CDATA[<=]]> 120 AND B.COMM_STAT = '1' THEN '1' ELSE '0' END AS COMM_STAT
+			 , B.COLL_DT
+		FROM CCTV_CONT A
+		LEFT JOIN CCTV_STATUS_CUR B ON A.CCTV_ID = B.CCTV_ID
+		WHERE A.USE_YN = 'Y'
+		AND A.CCTV_TYPE ='01'
+	</select>
+	
+	<select id="selectCctvDetail" parameterType="hashmap" resultType="egovMap">
+		SELECT A.*
+			 , B.COLL_DT
+			 , CASE WHEN (SYSDATE-B.COLL_DT) * 60 * 1440 <![CDATA[<=]]> 120 AND B.COMM_STAT = '1' THEN '1' ELSE '0' END AS COMM_STAT
+		FROM CCTV_CONT A
+		LEFT JOIN CCTV_STATUS_CUR B ON A.CCTV_ID = B.CCTV_ID
+		WHERE A.USE_YN = 'Y'
+		AND A.CCTV_ID = #{cctvId}
+		AND A.CCTV_TYPE ='01'
+	</select>
+
+	<select id="selectVdsList" resultType="egovMap">
+		SELECT A.*
+			 , CASE WHEN (SYSDATE-B.COLL_DT) * 60 * 1440 <![CDATA[<=]]> 120 AND B.COMM_STAT = '1' THEN '1' ELSE '0' END AS COMM_STAT
+			 , B.COLL_DT
+		FROM VDS_CONT A
+		LEFT JOIN VDS_STATUS_CUR B ON A.VDS_ID = B.VDS_ID
+		WHERE A.USE_YN = 'Y'
+	</select>
+	
+	<select id="selectVdsDetail" parameterType="hashmap" resultType="egovMap">
+		SELECT A.*
+			 , CASE WHEN (SYSDATE-B.COLL_DT) * 60 * 1440 <![CDATA[<=]]> 120 AND B.COMM_STAT = '1' THEN '1' ELSE '0' END AS COMM_STAT
+			 , B.COLL_DT
+		FROM VDS_CONT A
+		LEFT JOIN VDS_STATUS_CUR B ON A.VDS_ID = B.VDS_ID
+		WHERE A.USE_YN = 'Y'
+		AND A.VDS_ID = #{vdsId}
+	</select>
+	
+	<select id="selectSignalList" resultType="egovMap">
+		SELECT A.*
+			 , B.COMM_STAT
+			 , B.COLL_DT
+		FROM SIGNAL_CONT A
+		LEFT JOIN SIGNAL_STATUS_CUR B ON A.INT_NO = B.INT_NO
+	</select>
+	
+	<select id="selectVmsList" resultType="egovMap">
+		SELECT A.*
+			 , CASE WHEN (SYSDATE - B.COLL_DT) * 60 * 1440 <![CDATA[<=]]> 120 AND B.COMM_STAT = '1' THEN '1' ELSE '0' END AS COMM_STAT
+			 , B.COLL_DT
+		FROM VMS_CONT A
+		LEFT JOIN VMS_STATUS_CUR B ON A.VMS_ID = B.VMS_ID
+		WHERE A.USE_YN = 'Y'
+	</select>
+	
+	<select id="selectVmsDetail" parameterType="hashmap" resultType="egovMap">
+		SELECT A.*
+			 , CASE WHEN (SYSDATE - B.COLL_DT) * 60 * 1440 <![CDATA[<=]]> 120 AND B.COMM_STAT = '1' THEN '1' ELSE '0' END AS COMM_STAT
+			 , B.COLL_DT
+		FROM VMS_CONT A
+		LEFT JOIN VMS_STATUS_CUR B ON A.VMS_ID = B.VMS_ID
+		WHERE A.USE_YN = 'Y'
+		AND A.VMS_ID = #{vmsId}
+	</select>
+	
+	<select id="selectSmartList" resultType="egovMap">
+		SELECT A.*
+		FROM CROSS_CAMERA A
+		LEFT JOIN CROSS_LINK B ON A.CROSS_ID = B.CROSS_ID <!-- 몰라서 처음에 그냥 작성햇음 -->
+	</select>
+	
+	<select id="selectPisList" resultType="egovMap">
+		SELECT A.*
+			 , CASE WHEN B.COMM_STAT = 'Y' THEN '1' ELSE '0' END AS COMM_STAT
+		FROM PLOT A
+		LEFT JOIN PLOT_STATE B ON A.PLOT_ID = B.PLOT_ID
+		WHERE A.USE_YN = 'Y'
+	</select>
+	
+	<select id="selectWeather" resultType="egovMap">
+		SELECT A.BASE_DT
+			 , CASE WHEN A.WEATHER_CD != '4' THEN A.WEATHER_NM
+			 		ELSE DECODE(A.RAIN_TYPE_CD,'0',A.WEATHER_NM,A.RAIN_TYPE_NM) END AS WEATHER_NM
+			 , A.TEMPERATURE
+		FROM WEATHER_CUR A
+	</select>
+	
+	<select id="selectTrafficVertex" resultType="egovMap">
+	<!-- SELECT *
+	FROM ( -->
+		SELECT A.LINK_ID
+			 , A.ST_NODE_ID
+			 , (SELECT NODE_NM FROM NODE WHERE NODE_ID = A.ST_NODE_ID) AS ST_NODE_NM
+			 , A.ED_NODE_ID
+	 		 , (SELECT NODE_NM FROM NODE WHERE NODE_ID = A.ED_NODE_ID) AS ED_NODE_NM
+			 , A.LANES
+			 , A.ROAD_RANK
+			 , A.ROAD_TYPE
+			 , A.ROAD_NO
+			 , A.ROAD_NM
+			 , A.USE_YN
+			 , A.LINK_LENGTH
+			 , A.LINK_LEVEL
+			 , WM_CONCAT(C.GIS_POSX) AS GIS_POSX
+			 , WM_CONCAT(C.GIS_POSY) AS GIS_POSY
+		FROM LINK A
+		JOIN LINK_CONFIG B ON A.LINK_ID = B.LINK_ID
+		JOIN LINK_VERTEX C ON B.LINK_ID = C.LINK_ID
+		JOIN SRV_LINK D ON B.SRV_LINK_ID = D.SRV_LINK_ID
+		JOIN ROUTE_LINK_CONFIG E ON C.LINK_ID = E.LINK_ID
+		JOIN ROUTE F ON E.ROUTE_ID = F.ROUTE_ID
+		LEFT JOIN TRAFFIC_SRV_LINK G ON D.SRV_LINK_ID = G.SRV_LINK_ID
+		WHERE A.USE_YN = 'Y'
+		AND A.LINK_LEVEL = '2'
+		GROUP BY A.LINK_ID	, A.ST_NODE_ID	, A.ED_NODE_ID	, A.LANES	, A.ROAD_RANK	, A.ROAD_TYPE,  A.ROAD_NO , A.ROAD_NM	 , A.USE_YN , A.LINK_LENGTH , A.LINK_LEVEL
+		<!-- 	) A
+		WHERE ROWNUM <![CDATA[<]]> 3 -->
+	</select>
+	
+	<select id="selectVmsDispimgCurList" parameterType="hashmap" resultType="egovMap">
+		SELECT A.*
+			 , A.VMS_ID||'_'||A.DISP_SEQ AS FILENM
+		FROM VMS_DISPIMG_CUR A
+		WHERE VMS_ID = #{vmsId}
+	</select>
+	
+	<select id="selectPisDetail" parameterType="hashmap" resultType="egovMap">
+		SELECT *
+		FROM (
+		SELECT A.PLOT_NM
+			 , A.GIS_POSX
+			 , A.GIS_POSY
+			 , A.PLOT_TOTAL
+			 , A.PLOT_ADDR
+			 , B.*
+			 , TO_CHAR(TO_DATE(B.WEEKDAY_STTIME,'HH24MISS'),'HH24:MI:SS')  AS WEEKDAY_ST
+ 			 , TO_CHAR(TO_DATE(B.WEEKDAY_EDTIME,'HH24MISS'),'HH24:MI:SS')  AS WEEKDAY_ED
+			 , TO_CHAR(TO_DATE(B.SAT_STTIME,'HH24MISS'),'HH24:MI:SS')  AS SAT_ST
+ 			 , TO_CHAR(TO_DATE(B.SAT_EDTIME,'HH24MISS'),'HH24:MI:SS')  AS SAT_ED
+ 			 , TO_CHAR(TO_DATE(B.HOL_STTIME,'HH24MISS'),'HH24:MI:SS')  AS HOL_ST
+ 			 , TO_CHAR(TO_DATE(B.HOL_EDTIME,'HH24MISS'),'HH24:MI:SS')  AS HOL_ED
+			 , C.AVAILABLE_TOTAL
+			 , D.FLOOR_TOTAL
+			 , E.FLOOR_AVAILABLE_TOTAL
+			 , D.FLOOR_NO
+			 , CASE WHEN SUBSTR(D.FLOOR_NO,1,1) = 'B' THEN -1 * TO_NUMBER(SUBSTR(D.FLOOR_NO,2,10)) ELSE TO_NUMBER(SUBSTR(D.FLOOR_NO,2,10)) END AS ORD
+		FROM PLOT A
+		LEFT JOIN PLOT_OPERATE B ON A.PLOT_ID = B .PLOT_ID
+		LEFT JOIN PLOT_STATUS C ON A.PLOT_ID = C.PLOT_ID
+		LEFT JOIN PLOT_FLOOR D ON A.PLOT_ID = D.PLOT_ID
+		LEFT JOIN PLOT_FLOOR_STATUS E ON A.PLOT_ID = E.PLOT_ID AND D.FLOOR_NO = E.FLOOR_NO
+		WHERE A.USE_YN = 'Y'
+		AND A.PLOT_ID = #{plotId}
+		) A
+		ORDER BY ORD DESC
+	</select>
+	
+	<select id="selectIncidentList" resultType="egovMap">
+		SELECT *
+		FROM INCIDENT_HIST A
+		WHERE SYSDATE BETWEEN INC_STDT AND INC_EDDT
+		AND PRCS_STAT = '02'
+	</select>
+	
+	<select id="selectIncidentDetail" parameterType="hashmap" resultType="egovMap">
+		SELECT A.*
+		FROM INCIDENT_HIST A
+		WHERE INCIDENT_ID = #{incidentId}
+	</select>
+</mapper>

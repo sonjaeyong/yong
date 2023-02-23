@@ -1,0 +1,1408 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bis2">
+	<!-- 노선검색  - PC  -->
+	<select id="selectBusRouteList" parameterType="hashmap" resultType="egovMap">
+		SELECT 
+		    A.ROUTE_ID
+			,CASE WHEN A.AREA_CODE = 286
+			                       THEN '[공주]'
+			                      ELSE '[세종]'
+			                 END || A.ROUTE_NAME  AS ROUTE_NAME
+            ,A.AREA_CODE
+            , A.ROUTE_NAME AS ROUTE_NM
+			,REGEXP_REPLACE(A.ROUTE_NAME,'[가-힝]', 'A') ||'_'|| A.AREA_CODE  AS TITLE_ROUTE
+		    ,A.ROUTE_SUBID
+		    ,A.ROUTE_TYPE
+		    ,A.ROUTE_DIRECTION
+		    ,A.ROUTE_EXPLAIN
+		    ,A.RUN_INTERVAL
+        	,A.RUN_DISTANCE
+        	,A.WEB_EXPLAIN_DISPLAY
+		    ,(
+		        SELECT
+		            STOP_NAME
+		        FROM BUSSTOP
+		        WHERE B.ST_STOP_ID = STOP_ID
+		     ) AS ST_STOP_NAME
+		     ,(
+		        SELECT
+		            STOP_NAME
+		        FROM BUSSTOP
+		        WHERE B.ED_STOP_ID = STOP_ID
+		     ) AS ED_STOP_NAME
+		     ,NVL((
+			        SELECT
+			            DEPARTURE_TIME
+			        FROM BUS_TIME_TABLE
+			        WHERE A.ROUTE_ID = ROUTE_ID
+			        	AND DECODE(TO_CHAR(SYSDATE, 'd'), 1, HOLIDY_OPERATION_FLAG , 7, SAT_OPERATION_FLAG, WEEK_OPERATION_FLAG) = 1
+			            AND ORD IN (SELECT MIN(ORD) FROM BUS_TIME_TABLE WHERE A.ROUTE_ID = ROUTE_ID AND DECODE(TO_CHAR(SYSDATE, 'd'), 1, HOLIDY_OPERATION_FLAG , 7, SAT_OPERATION_FLAG, WEEK_OPERATION_FLAG) = 1)
+			            AND ROWNUM = 1
+			      ), '정보없음') AS START_TIME
+			 ,NVL((
+			        SELECT
+			            DEPARTURE_TIME
+			        FROM BUS_TIME_TABLE
+			        WHERE A.ROUTE_ID = ROUTE_ID
+			        	AND DECODE(TO_CHAR(SYSDATE, 'd'), 1, HOLIDY_OPERATION_FLAG , 7, SAT_OPERATION_FLAG, WEEK_OPERATION_FLAG) = 1
+			            AND ORD IN (SELECT MAX(ORD) FROM BUS_TIME_TABLE WHERE A.ROUTE_ID = ROUTE_ID AND DECODE(TO_CHAR(SYSDATE, 'd'), 1, HOLIDY_OPERATION_FLAG , 7, SAT_OPERATION_FLAG, WEEK_OPERATION_FLAG) = 1)
+			            AND ROWNUM = 1
+			      ), '정보없음') AS END_TIME
+		
+			,CASE WHEN
+			(
+			    SELECT
+		            COUNT(*)
+		        FROM BUS_TIME_TABLE
+		        WHERE A.ROUTE_ID = ROUTE_ID
+		        	AND DECODE(TO_CHAR(SYSDATE, 'd'), 1, HOLIDY_OPERATION_FLAG , 7, SAT_OPERATION_FLAG, WEEK_OPERATION_FLAG) = 1
+			) = 0              
+			THEN '운행없음'
+			ELSE '1일 ' ||
+			 (
+			    SELECT
+		            COUNT(*)
+		        FROM BUS_TIME_TABLE
+		        WHERE A.ROUTE_ID = ROUTE_ID
+		        	AND DECODE(TO_CHAR(SYSDATE, 'd'), 1, HOLIDY_OPERATION_FLAG , 7, SAT_OPERATION_FLAG, WEEK_OPERATION_FLAG) = 1
+			)
+			|| '회 운행'
+			END AS ALLOC_TIME,
+			(SELECT 
+   				DECODE( SUM(DECODE(WEEK_OPERATION_FLAG,'1',1)) ,0, '주중: 운행없음', '주중: '||SUM(DECODE(WEEK_OPERATION_FLAG,'1',1))||'회,') || 
+   				DECODE( SUM(DECODE(HOLIDY_OPERATION_FLAG,'1',1)) ,0, ' 주말: 운행없음', ' 주말: '||SUM(DECODE(HOLIDY_OPERATION_FLAG,'1',1))||'회') || ' 운행' AS OPER_COUNT
+ 			FROM BUS_TIME_TABLE
+		    WHERE A.ROUTE_ID = ROUTE_ID
+            GROUP BY ROUTE_ID) AS T_ALLOC_TIME,
+			A.TURN_USEFLAG
+		FROM BUSROUTE A, BUSROUTE_SECTION_EDIT B
+		WHERE
+			0=0
+			<if test='searchText != null and searchText != ""'>
+				<!-- AND (A.ROUTE_NAME || DECODE(A.ROUTE_SUBID, 'A' , '' , 'B', '-1', 'C', '-2', 'D', '-3', A.ROUTE_SUBID)) LIKE '%' || #{route_name} || '%' -->
+				AND A.ROUTE_NAME LIKE '%' || #{searchText} || '%'
+			</if>
+		   AND A.ROUTESECT_GROUP_ID = B.ROUTESECT_GROUP_ID
+		   AND ROUTE_STATUS = 1
+		   <if test='rank == "3"'>
+		    	<if test='user_id != ""'>
+		    		AND A.COMPANY_ID = (SELECT COMPANY_ID FROM ADMIN_ACCOUNT WHERE USER_ID = #{user_id})
+		    	</if>
+		    </if>
+		    <if test='route_id != null and route_id != ""'>
+			   	AND A.ROUTE_ID = #{route_id}
+			</if>
+			<if test='route_type != null and route_type != ""'>
+				AND A.ROUTE_TYPE = #{route_type}
+			</if>
+		ORDER BY A.ROUTE_TYPE, LPAD(REPLACE(A.ROUTE_NAME, '-1', ''), 10, '0'), A.ROUTE_DIRECTION, A.ROUTE_ID
+	</select>
+
+	<!-- 버스 노선 목록 검색 - 모바일 -->
+	<select id="selectBusRouteListM" parameterType="hashmap" resultType="egovMap">
+		SELECT 
+        	A.ROUTE_ID
+		    ,CASE WHEN A.AREA_CODE = 286
+			                       THEN '[공주]'
+			                      ELSE '[세종]'
+			                 END || A.ROUTE_NAME  AS ROUTE_NAME
+			,REGEXP_REPLACE(A.ROUTE_NAME,'[가-힝]', 'A') ||'_'|| A.AREA_CODE  AS TITLE_ROUTE
+			,A.AREA_CODE
+		    ,A.ROUTE_SUBID
+		    ,A.ROUTE_TYPE
+		    ,A.ROUTE_DIRECTION
+		    ,A.ROUTE_EXPLAIN
+		    ,A.RUN_INTERVAL
+        	,A.RUN_DISTANCE
+        	,A.WEB_EXPLAIN_DISPLAY
+		    ,(
+		        SELECT
+		            STOP_NAME
+		        FROM BUSSTOP
+		        WHERE B.ST_STOP_ID = STOP_ID
+		     ) AS ST_STOP_NAME
+		     ,(
+		        SELECT
+		            STOP_NAME
+		        FROM BUSSTOP
+		        WHERE B.ED_STOP_ID = STOP_ID
+		     ) AS ED_STOP_NAME
+		     ,NVL((
+			        SELECT
+			            DEPARTURE_TIME
+			        FROM BUS_TIME_TABLE
+			        WHERE A.ROUTE_ID = ROUTE_ID
+			        	AND DECODE(TO_CHAR(SYSDATE, 'd'), 1, HOLIDY_OPERATION_FLAG , 7, SAT_OPERATION_FLAG, WEEK_OPERATION_FLAG) = 1
+			            AND ORD IN (SELECT MIN(ORD) FROM BUS_TIME_TABLE WHERE A.ROUTE_ID = ROUTE_ID AND DECODE(TO_CHAR(SYSDATE, 'd'), 1, HOLIDY_OPERATION_FLAG , 7, SAT_OPERATION_FLAG, WEEK_OPERATION_FLAG) = 1)
+			     		AND ROWNUM = 1
+			      ), '정보없음') AS START_TIME
+			 ,NVL((
+			        SELECT
+			            DEPARTURE_TIME
+			        FROM BUS_TIME_TABLE
+			        WHERE A.ROUTE_ID = ROUTE_ID
+			        	AND DECODE(TO_CHAR(SYSDATE, 'd'), 1, HOLIDY_OPERATION_FLAG , 7, SAT_OPERATION_FLAG, WEEK_OPERATION_FLAG) = 1
+			            AND ORD IN (SELECT MAX(ORD) FROM BUS_TIME_TABLE WHERE A.ROUTE_ID = ROUTE_ID AND DECODE(TO_CHAR(SYSDATE, 'd'), 1, HOLIDY_OPERATION_FLAG , 7, SAT_OPERATION_FLAG, WEEK_OPERATION_FLAG) = 1)
+			      		AND ROWNUM = 1
+			      ), '정보없음') AS END_TIME
+		
+			,CASE WHEN
+			(
+			    SELECT
+		            COUNT(*)
+		        FROM BUS_TIME_TABLE
+		        WHERE A.ROUTE_ID = ROUTE_ID
+		        	AND DECODE(TO_CHAR(SYSDATE, 'd'), 1, HOLIDY_OPERATION_FLAG , 7, SAT_OPERATION_FLAG, WEEK_OPERATION_FLAG) = 1
+			) = 0              
+			THEN '운행없음'
+			ELSE '1일 ' ||
+			 (
+			    SELECT
+		            COUNT(*)
+		        FROM BUS_TIME_TABLE
+		        WHERE A.ROUTE_ID = ROUTE_ID
+		        	AND DECODE(TO_CHAR(SYSDATE, 'd'), 1, HOLIDY_OPERATION_FLAG , 7, SAT_OPERATION_FLAG, WEEK_OPERATION_FLAG) = 1
+			)
+			|| '회 운행'
+			END AS ALLOC_TIME,
+			(SELECT 
+   				DECODE( SUM(DECODE(WEEK_OPERATION_FLAG,'1',1)) ,0, '주중: 운행없음', '주중: '||SUM(DECODE(WEEK_OPERATION_FLAG,'1',1))||'회,') || 
+   				DECODE( SUM(DECODE(HOLIDY_OPERATION_FLAG,'1',1)) ,0, ' 주말: 운행없음', ' 주말: '||SUM(DECODE(HOLIDY_OPERATION_FLAG,'1',1))||'회') || ' 운행' AS OPER_COUNT
+ 			FROM BUS_TIME_TABLE
+		    WHERE A.ROUTE_ID = ROUTE_ID
+            GROUP BY ROUTE_ID) AS T_ALLOC_TIME,
+			A.TURN_USEFLAG,
+			B.ROUTESECT_EXPLAIN
+		FROM BUSROUTE A, BUSROUTE_SECTION_EDIT B,(SELECT ROUTE_ID, ROUTE_NAME FROM (SELECT ROUTE_NAME,MIN(ROUTE_ID) ROUTE_ID,MIN(ROUTE_SUBID) SUBID FROM BUSROUTE A WHERE A.ROUTE_STATUS = 1 GROUP BY ROUTE_NAME, AREA_CODE ORDER BY ROUTE_NAME) ORDER BY ROUTE_NAME,SUBID) C
+  
+		WHERE
+			0 = 0
+		   AND A.ROUTESECT_GROUP_ID = B.ROUTESECT_GROUP_ID
+  		   AND A.ROUTE_ID = C.ROUTE_ID
+		   AND A.ROUTE_STATUS = 1
+		
+		   AND A.ROUTESECT_GROUP_ID = B.ROUTESECT_GROUP_ID
+		   <if test='route_name != "" and route_name != null'>
+		   AND A.ROUTE_NAME LIKE '%'||#{route_name}||'%'
+	  	   </if>
+		   
+		ORDER BY A.ROUTE_NAME, A.ROUTE_TYPE, A.ROUTE_ID
+	</select>
+	
+	<!-- 노선 검색 중복값 가져오기 -->
+	<select id="selectBusRouteList2" parameterType="hashmap" resultType="egovMap">
+		SELECT
+		    /** (
+		        SELECT
+		            STOP_NAME
+		        FROM BUSSTOP
+		        WHERE B.ST_STOP_ID = STOP_ID
+		     ) AS ST_STOP_NAME
+		     ,(
+		        SELECT
+		            STOP_NAME
+		        FROM BUSSTOP
+		        WHERE B.ED_STOP_ID = STOP_ID
+		     ) AS ED_STOP_NAME		   
+		     **/
+			A.* 
+        	,(SELECT COUNT(*) FROM BUS_TIME_TABLE WHERE ROUTE_ID = A.ROUTE_ID AND DECODE(TO_CHAR(SYSDATE, 'd'),1,HOLIDY_OPERATION_FLAG, 7, SAT_OPERATION_FLAG,WEEK_OPERATION_FLAG) = 1) OPER_CNT
+		FROM BUSROUTE A, BUSROUTE_SECTION_EDIT B  
+		WHERE
+			0 = 0
+		   AND A.ROUTESECT_GROUP_ID = B.ROUTESECT_GROUP_ID
+		   AND A.AREA_CODE = 286
+		   AND ROUTE_STATUS = 1
+		   AND A.ROUTE_NAME = #{route_name}
+       ORDER BY A.ROUTE_TYPE, A.ROUTE_DIRECTION
+	</select>
+
+	<!-- 실시간 버스 위치 검색-->
+	<select id="selectBusRealLocList" parameterType="hashmap" resultType="egovMap">
+		SELECT 
+		    TRIM(D.PLATE_NO) PLATE_NO
+		    ,C.STOP_NAME
+		    ,A.LNG
+		    ,A.LAT
+		    ,A.VEH_ID
+		    ,A.ROUTE_ID
+		    ,( 
+		    	CASE WHEN E.TURN_USEFLAG = 1
+               	THEN
+                (
+                    CASE WHEN B.TURN_ORD > A.CURRENT_NODE_ORD
+                    THEN 'UP'
+                    ELSE 'DW'
+                    END
+                )
+                ELSE 'NO' 
+                END
+             ) TURN_FLAG
+		    ,E.ROUTE_TYPE
+		    ,A.ANGLE
+		    ,A.SPEED
+		    ,A.EVENT_TYPE
+		    ,C.STOP_ID
+		    ,A.OPERATION_STATUS
+		    ,D.LOW_FLAG
+		    ,E.TURN_USEFLAG
+		    ,E.ROUTE_DIRECTION
+		FROM BUS_OPERATION A, M_BUSROUTE_STOP B, BUSSTOP C, VEHICLE D, BUSROUTE E
+		WHERE 0 = 0
+			<if test='routeId != "" and routeId != null'>
+		   		AND A.ROUTE_ID = #{routeId}
+		   		<!-- 
+		   		AND A.LNG IS NOT NULL
+		   		AND A.LAT IS NOT NULL
+		   		 -->
+		   		AND A.OPERATION_STATUS = 1
+		    </if>
+		    AND A.ROUTE_ID = E.ROUTE_ID
+		    AND A.ROUTE_ID = B.ROUTE_ID
+		    AND A.LATEST_STOP_ORD = B.STOP_ORD
+		    AND B.STOP_ID = C.STOP_ID
+		    AND A.VEH_ID = D.VEH_ID
+		ORDER BY B.STOP_ORD
+	</select>
+	
+	<!-- 버스 노선 상세 정류장 검색 -->
+	<select id="selectBusRouteDetailList" parameterType="hashmap" resultType="egovMap">
+		SELECT 
+		    A.ROUTE_ID
+		    ,A.ROUTE_NAME || CASE WHEN A.ROUTE_CLASS = NULL
+			                       THEN NULL
+			                      ELSE A.ROUTE_CLASS
+			                 END AS ROUTE_NAME
+		    ,A.ROUTE_TYPE
+		    ,A.ROUTE_DIRECTION
+		    ,C.STOP_NAME
+		    ,NVL(TO_CHAR(C.SERVICE_ID), 'ID 없음') SERVICE_ID
+		    ,C.STOP_ID
+		    ,C.LNG
+		    ,C.LAT
+		    ,B.STOP_ORD
+			,CASE WHEN
+			(
+			    SELECT
+		            COUNT(*)
+		        FROM BUS_TIME_TABLE
+		        WHERE A.ROUTE_ID = ROUTE_ID
+		        	AND DECODE(TO_CHAR(SYSDATE, 'd'), 1, HOLIDY_OPERATION_FLAG , 7, SAT_OPERATION_FLAG, WEEK_OPERATION_FLAG) = 1
+			) = 0              
+			THEN '운행없음'
+			ELSE 
+			'1일  ' ||
+			 (
+			    SELECT
+		            COUNT(*)
+		        FROM BUS_TIME_TABLE
+		        WHERE A.ROUTE_ID = ROUTE_ID
+		        	AND DECODE(TO_CHAR(SYSDATE, 'd'), 1, HOLIDY_OPERATION_FLAG , 7, SAT_OPERATION_FLAG, WEEK_OPERATION_FLAG) = 1
+			)
+			|| '회 운행'
+			END AS ALLOC_TIME
+			
+			 ,NVL((
+			        SELECT
+			            DEPARTURE_TIME
+			        FROM BUS_TIME_TABLE
+			        WHERE A.ROUTE_ID = ROUTE_ID
+			        	AND DECODE(TO_CHAR(SYSDATE, 'd'), 1, HOLIDY_OPERATION_FLAG , 7, SAT_OPERATION_FLAG, WEEK_OPERATION_FLAG) = 1
+			            AND ORD IN (SELECT MIN(ORD) FROM BUS_TIME_TABLE WHERE A.ROUTE_ID = ROUTE_ID AND DECODE(TO_CHAR(SYSDATE, 'd'), 1, HOLIDY_OPERATION_FLAG , 7, SAT_OPERATION_FLAG, WEEK_OPERATION_FLAG) = 1)
+			            AND ROWNUM = 1
+			      ), '정보없음') AS START_TIME
+			 ,NVL((
+			        SELECT
+			            DEPARTURE_TIME
+			        FROM BUS_TIME_TABLE
+			        WHERE A.ROUTE_ID = ROUTE_ID
+			        	AND DECODE(TO_CHAR(SYSDATE, 'd'), 1, HOLIDY_OPERATION_FLAG , 7, SAT_OPERATION_FLAG, WEEK_OPERATION_FLAG) = 1
+			            AND ORD IN (SELECT MAX(ORD) FROM BUS_TIME_TABLE WHERE A.ROUTE_ID = ROUTE_ID AND DECODE(TO_CHAR(SYSDATE, 'd'), 1, HOLIDY_OPERATION_FLAG , 7, SAT_OPERATION_FLAG, WEEK_OPERATION_FLAG) = 1)
+			            AND ROWNUM = 1
+			      ), '정보없음') AS END_TIME
+		
+			
+			,B.TURN_ORD
+			,(
+		        CASE 
+		        WHEN B.ROUTE_ORD <![CDATA[<=]]> B.TURN_ORD
+		        THEN 'UP'
+		        WHEN B.ROUTE_ORD <![CDATA[>]]> B.TURN_ORD
+		        THEN 'DW'
+		        END
+		    ) TURN_FLAG
+		    ,A.TURN_USEFLAG
+		    ,A.AREA_CODE
+		FROM BUSROUTE A, M_BUSROUTE_STOP B, BUSSTOP C
+		WHERE A.ROUTE_ID = #{routeId}
+		   AND A.ROUTE_ID = B.ROUTE_ID
+		   AND ROUTE_STATUS = 1
+		   AND A.ROUTESECT_GROUP_ID = B.ROUTESECT_GROUP_ID
+		   AND B.STOP_ID = C.STOP_ID 
+		   AND C.USE_FLAG = 1
+		   <if test='stop_id != null'>
+		   		AND C.STOP_ID = #{stop_id}
+		   </if>
+		ORDER BY ROUTE_ID, STOP_ORD
+	</select>
+	
+	<!-- 버스 노선 상세 정류장 지도 정보 검색 -->
+	<select id="selectBusRouteDetailMapList" parameterType="hashmap" resultType="egovMap">
+		SELECT 
+		    LINKS.LINK_LIST AS LINK_ID
+		    ,LINKS.ROUTE_ORD
+		    ,LINKS.SECT_DISTANCE
+		    ,VTX.ORD
+		    ,VTX.LAT
+		    ,VTX.LNG
+		    ,LINKS.LINK_LEN
+		    ,ROUTE_TYPE
+		    ,ROUTE_ID
+		    ,LINKS.EDIT_TURN_ORD AS TURN_ORD
+		    ,LINKS.TURN_USEFLAG
+		 FROM 
+		 ( 
+		    SELECT RTL.EDIT_TURN_ORD, RTL.TURN_USEFLAG, RTL.ROUTE_ORD, RTL.LINK_ID, DECODE(RTL.LINK_ID,LAG(RTL.LINK_ID, 1) OVER(ORDER BY RTL.ROUTE_ORD ASC), '', RTL.LINK_ID) AS LINK_LIST, RTL.SECT_DISTANCE, LK.LINK_LEN, ROUTE_TYPE, ROUTE_ID
+		    FROM 
+		    LINK LK,
+		    ( 
+		         SELECT B.*, A.LINK_ID, A.ROUTE_ORD, A.SECT_DISTANCE, BR.ROUTE_TYPE, BR.ROUTE_ID, C.EDIT_TURN_ORD, BR.TURN_USEFLAG
+		         FROM BUSROUTE BR, BUSROUTE_SECTION_DETAIL_EDIT A, BISNODE B, BUSROUTE_SECTION_EDIT C 
+		         WHERE 
+		         A.ED_NODE_ID = B.NODE_ID 
+		         AND BR.ROUTESECT_GROUP_ID  = A.ROUTESECT_GROUP_ID 
+		         AND BR.ROUTESECT_GROUP_ID  = C.ROUTESECT_GROUP_ID
+		         AND BR.ROUTE_ID = #{routeId}
+		         ORDER BY ROUTE_ORD                      
+		    ) RTL                                         
+		    WHERE LK.LINK_ID = RTL.LINK_ID
+		 ) LINKS,                                    
+		 LINK_VERTEX VTX                           
+		 WHERE LINK_LIST IS NOT NULL             
+		     AND LINKS.LINK_LIST = VTX.LINK_ID 
+		     ORDER BY ROUTE_ORD, VTX.ORD 
+	</select>
+	
+	<!-- 관리자용 -->
+	<select id="selectAdStopList" parameterType="hashmap" resultType="egovMap">
+		SELECT
+		    STOP_ID
+		    ,NVL(TO_CHAR(SERVICE_ID), 'ID 없음') SERVICE_ID
+		    ,STOP_NAME
+		    ,STOP_IMG_FILE
+	        ,STOP_TYPE_CODE
+	        ,DECODE(ADD_FAC, NULL, '000000', ADD_FAC) ADD_FAC
+	        ,REMODEL_DT
+	        ,CREATE_DT
+	        ,REMODEL_FLAG
+	        ,STOP_HIS
+		FROM BUSSTOP 
+		WHERE 
+			AREA_CODE = 286
+			AND STOP_ID LIKE '286%'
+			AND USE_FLAG = 1
+			<if test='stop_name != null and stop_name != ""'>
+			AND STOP_NAME LIKE '%' || #{stop_name} || '%' 
+			</if>
+		ORDER BY STOP_NAME
+	</select>
+	
+	<!-- 관리자용 -->
+	<update id="updateStopImg" parameterType="hashmap">
+		UPDATE BUSSTOP
+		SET
+		    STOP_TYPE_CODE = #{stop_type_code, jdbcType=VARCHAR}
+		    ,ADD_FAC = #{add_fac, jdbcType=VARCHAR}
+		    ,REMODEL_DT = #{remodel_dt, jdbcType=VARCHAR}
+		    ,CREATE_DT = #{create_dt, jdbcType=VARCHAR}
+		    ,REMODEL_FLAG = #{remodel_flag, jdbcType=VARCHAR}
+		    ,STOP_HIS = #{stop_his, jdbcType=VARCHAR}
+		    <if test='stop_img_file != null and stop_img_file != ""'>
+		    	,STOP_IMG_FILE = #{stop_img_file}
+		    </if>
+		WHERE
+			STOP_ID = #{stop_id}
+	</update>
+	
+	
+	<!-- 정류장 목록 검색 -->
+	<select id="selectBusStopList" parameterType="hashmap" resultType="egovMap">
+		SELECT
+		    A.STOP_ID
+		    ,NVL(TO_CHAR(A.SERVICE_ID), 'ID 없음') SERVICE_ID
+		    ,A.STOP_NAME
+		    ,A.LINK_ID
+		    ,A.LAT
+		    ,A.LNG
+		FROM BUSSTOP A
+		WHERE 
+			0 = 0
+			<if test='stop_id != null and stop_id != ""'>
+		   		AND A.STOP_ID = #{stop_id}
+		   	</if>
+		   	<if test='area_code == "286"'>
+		   	    AND A.AREA_CODE = 286
+		   	</if>
+			AND USE_FLAG = 1
+			AND ( FN_KORINITIALKEYWORD(A.STOP_NAME) LIKE '%' || #{searchText} || '%' OR A.STOP_NAME LIKE '%' || #{searchText} || '%' 
+			<!-- OR A.SERVICE_ID LIKE '%' || #{service_id} || '%' --> )
+		ORDER BY INSTR(FN_KORINITIALKEYWORD(A.STOP_NAME), #{searchText}, 1, 1) ASC,INSTR(A.STOP_NAME, #{searchText}, 1, 1) ASC, 
+				 <!-- INSTR(A.SERVICE_ID, #{service_id}, 1, 1) ASC, --> A.STOP_NAME ASC
+	</select>
+	
+	<!-- 정류장 검색 -->
+	<select id="selectBusStop" parameterType="hashmap" resultType="egovMap">
+		SELECT
+		    A.STOP_ID
+		    ,NVL(TO_CHAR(A.SERVICE_ID), 'ID 없음') SERVICE_ID
+		    ,A.STOP_NAME
+		    ,A.LINK_ID
+		    ,A.LAT
+		    ,A.LNG
+		    ,A.REMARK
+		FROM BUSSTOP A
+		WHERE 0=0
+			<if test='stop_id != null'>
+	   			AND A.STOP_ID = #{stop_id}
+		    </if>
+		    <if test='service_id != null'>
+		   		AND A.SERVICE_ID = #{service_id}
+		    </if>
+			AND USE_FLAG = 1
+	</select>
+	
+	<!-- 경유 노선 리스트 검색 -->
+	<select id="selectBusStopRouteList" parameterType="hashmap" resultType="egovMap">
+		 SELECT 
+			A.ROUTE_ID
+		    ,CASE WHEN A.AREA_CODE = 286
+			                       THEN '[공주]'
+			                      ELSE '[세종]'
+			                 END || A.ROUTE_NAME  AS ROUTE_NAME
+			,A.AREA_CODE
+			,A.ROUTE_SUBID
+			,A.ROUTE_TYPE
+			,A.ROUTE_DIRECTION
+			,A.ROUTE_EXPLAIN
+			,B.STOP_ID
+			,B.STOP_NAME
+			,NVL(TO_CHAR(D.SERVICE_ID), 'ID 없음') SERVICE_ID
+			,(SELECT STOP_NAME FROM BUSSTOP WHERE C.ST_STOP_ID = STOP_ID) AS ST_STOP_NAME
+			,(SELECT STOP_NAME FROM BUSSTOP WHERE C.ED_STOP_ID = STOP_ID) AS ED_STOP_NAME
+			,AA.VEH_ID
+			,(SELECT PLATE_NO FROM VEHICLE WHERE VEH_ID = AA.VEH_ID) AS PLATE_NO
+			,(SELECT LOW_FLAG FROM VEHICLE WHERE VEH_ID = AA.VEH_ID) AS LOW_FLAG
+			,(
+    			CASE
+			      WHEN AA.PROVIDE_TYPE = 3 THEN (CASE WHEN CEIL(AA.RTIME / 60) <![CDATA[<=]]> 3 THEN '잠시 후 도착' ELSE TO_CHAR(CEIL(AA.RTIME / 60)) END)
+			      WHEN AA.PROVIDE_TYPE = 2 THEN '회차지 대기중'
+			      WHEN AA.PROVIDE_TYPE = 1 OR AA.PROVIDE_TYPE IS NULL
+        		THEN (
+            		SELECT (
+		                CASE
+		                  WHEN LENGTH(MIN(TO_NUMBER(DEPARTURE_TIME))) = 3
+		                    THEN '0' || SUBSTR(MIN(TO_NUMBER(DEPARTURE_TIME)),
+		                        1, 1) || ':' || SUBSTR(MIN(TO_NUMBER(DEPARTURE_TIME)),
+		                        - 2)
+		                  WHEN LENGTH(MIN(TO_NUMBER(DEPARTURE_TIME))) = 4
+		                    THEN SUBSTR(MIN(TO_NUMBER(DEPARTURE_TIME)),
+		                        1, 2) || ':' || SUBSTR(MIN(TO_NUMBER(DEPARTURE_TIME)),
+		                        - 2)
+		                  ELSE '정보없음'
+		       			END)
+            		FROM BUS_TIME_TABLE
+            		WHERE 
+            			ROUTE_ID = A.ROUTE_ID
+              			AND TO_NUMBER(DEPARTURE_TIME) <![CDATA[>]]> TO_CHAR(SYSDATE,'HH24MI')
+              			AND DECODE(TO_CHAR(SYSDATE, 'd'),1,HOLIDY_OPERATION_FLAG, 7, SAT_OPERATION_FLAG,WEEK_OPERATION_FLAG) = 1
+            	)
+      			ELSE '정보없음'
+    			END) AS PROVIDE_TYPE
+  			,(
+			    CASE
+			      WHEN AA.PROVIDE_TYPE IS NULL THEN 1
+			      ELSE AA.PROVIDE_TYPE
+			    END) AS PROVIDE_CODE, (
+			    CASE
+			      WHEN AA.PROVIDE_TYPE = 1 OR AA.PROVIDE_TYPE IS NULL
+			        THEN '기점'
+			      ELSE AA.RSTOP || '전'
+			    END) AS RSTOP, (
+			    CASE
+			      WHEN AA.PROVIDE_TYPE = 1 OR AA.PROVIDE_TYPE IS NULL
+			        THEN (
+			            SELECT STOP_NAME
+			            FROM BUSSTOP
+			            WHERE C.ST_STOP_ID = STOP_ID
+			            )
+			      ELSE AA.STOP_NAME
+			    END) AS LAST_STOP_NAME,
+			  NVL((
+			      SELECT DEPARTURE_TIME
+			      FROM BUS_TIME_TABLE
+			      WHERE A.ROUTE_ID = ROUTE_ID
+			        AND DECODE(TO_CHAR(SYSDATE, 'd'), 1, HOLIDY_OPERATION_FLAG,
+			          7, SAT_OPERATION_FLAG, WEEK_OPERATION_FLAG) = 1
+			        AND ORD IN (
+			          SELECT MIN(ORD)
+			          FROM BUS_TIME_TABLE
+			          WHERE A.ROUTE_ID = ROUTE_ID
+			            AND DECODE(TO_CHAR(SYSDATE, 'd'), 1, HOLIDY_OPERATION_FLAG,
+			              7, SAT_OPERATION_FLAG, WEEK_OPERATION_FLAG) = 1
+			          )
+			          AND ROWNUM = 1
+			      ), '정보없음') AS START_TIME
+	      ,NVL((
+		      SELECT DEPARTURE_TIME
+		      FROM BUS_TIME_TABLE
+		      WHERE A.ROUTE_ID = ROUTE_ID
+		        AND DECODE(TO_CHAR(SYSDATE, 'd'), 1, HOLIDY_OPERATION_FLAG,
+		          7, SAT_OPERATION_FLAG, WEEK_OPERATION_FLAG) = 1
+		        AND ORD IN (
+		          SELECT MAX(ORD)
+		          FROM BUS_TIME_TABLE
+		          WHERE A.ROUTE_ID = ROUTE_ID
+		            AND DECODE(TO_CHAR(SYSDATE, 'd'), 1, HOLIDY_OPERATION_FLAG,
+		              7, SAT_OPERATION_FLAG, WEEK_OPERATION_FLAG) = 1
+		          )
+		          AND ROWNUM = 1
+		      ), '정보없음') AS END_TIME
+	      ,CASE
+		    WHEN (
+		        SELECT COUNT(*)
+		        FROM BUS_TIME_TABLE
+		        WHERE A.ROUTE_ID = ROUTE_ID
+		          AND DECODE(TO_CHAR(SYSDATE, 'd'), 1, HOLIDY_OPERATION_FLAG,
+		            7, SAT_OPERATION_FLAG, WEEK_OPERATION_FLAG) = 1
+		        )= 0 THEN '운행없음'
+		    ELSE '1일  ' || (
+		        SELECT COUNT(*)
+		        FROM BUS_TIME_TABLE
+		        WHERE A.ROUTE_ID = ROUTE_ID
+		          AND DECODE(TO_CHAR(SYSDATE, 'd'), 1, HOLIDY_OPERATION_FLAG,
+		            7, SAT_OPERATION_FLAG, WEEK_OPERATION_FLAG) = 1
+		        ) || '회 운행'
+		  	END AS ALLOC_TIME
+	  	,A.TURN_USEFLAG
+	  	,A.ROUTE_NAME AS ROUTE_NM
+	FROM 
+		BUSROUTE A
+  		LEFT JOIN (
+		    SELECT A.ROUTE_ID, A.ROUTE_EXPLAIN, A.ROUTE_DIRECTION,
+		      A.ROUTE_SUBID, A.ROUTE_NAME,
+		      CASE
+		        WHEN (A.TURN_USEFLAG = 1) THEN DECODE(C.CURRENT_NODE_ORD,
+		              1, 1, TURN_ORD, 2, 3)
+		        ELSE DECODE(C.CURRENT_NODE_ORD, 1, 1, 3)
+		      END PROVIDE_TYPE, C.VEH_ID, B.STOP_ORD - C.LATEST_STOP_ORD AS RSTOP,
+		      C.TRAVEL_TIME + C.SERVICE_TIME AS RTIME, (
+		        SELECT STOP_NAME
+		        FROM M_BUSROUTE_STOP AA, BUSSTOP BB
+		        WHERE  AA.ROUTE_ID = B.ROUTE_ID
+		          AND AA.STOP_ID = BB.STOP_ID          
+		          AND AA.STOP_ORD = C.LATEST_STOP_ORD
+		        ) STOP_NAME,
+		      RANK() OVER(PARTITION BY A.ROUTE_ID ORDER BY (C.TRAVEL_TIME + C.SERVICE_TIME) ASC,
+		        (B.STOP_ORD - C.LATEST_STOP_ORD) ASC, ROWNUM) AS RANK
+		    FROM BUSROUTE A, M_BUSROUTE_STOP B,
+      			(
+		        SELECT B.ED_NODE_ID AS NODE_ID, A.ROUTE_ID,
+		          B.ROUTESECT_GROUP_ID, B.ROUTE_ORD, C.VEH_ID,
+		          C.CURRENT_NODE_ORD, C.LATEST_STOP_ORD, FUSN_TRAVEL_TIME,
+		          FUSN_SERVICE_TIME,
+		          SUM(D.FUSN_TRAVEL_TIME) OVER(PARTITION BY A.ROUTE_ID,
+		            C.VEH_ID ORDER BY A.ROUTE_ID, B.ROUTE_ORD,
+		            C.VEH_ID) TRAVEL_TIME,
+		          SUM(D.FUSN_SERVICE_TIME) OVER(PARTITION BY A.ROUTE_ID,
+		            C.VEH_ID ORDER BY A.ROUTE_ID, B.ROUTE_ORD,
+		            C.VEH_ID) - D.FUSN_SERVICE_TIME AS SERVICE_TIME
+		        FROM BUSROUTE A, M_BUSROUTE_SECTION_DETAIL B,
+		          BUS_OPERATION C, M_PROCESS_CURRENT D, BUSROUTE_SECTION_EDIT E
+		        WHERE 1=1
+		          AND A.ROUTE_ID = C.ROUTE_ID
+		          AND A.ROUTE_STATUS = 1          
+		          AND A.ROUTE_ID = D.ROUTE_ID
+		          AND A.ROUTESECT_GROUP_ID = E.ROUTESECT_GROUP_ID    
+		          AND A.ROUTESECT_GROUP_ID = B.ROUTESECT_GROUP_ID                
+		          AND B.ROUTESECT_GROUP_ID IN (
+		            SELECT DISTINCT ROUTESECT_GROUP_ID
+		            FROM M_BUSROUTE_SECTION_DETAIL
+		            WHERE ED_NODE_ID = #{stopId}
+		            )          
+		          AND B.ST_NODE_ID = D.ST_NODE_ID
+		          AND B.ED_NODE_ID = D.ED_NODE_ID
+		          AND B.ROUTE_ORD > C.CURRENT_NODE_ORD        
+		          AND C.OPERATION_STATUS = 1
+ 		          AND ((A.TURN_USEFLAG = 1
+		              AND E.TURN_ORD <![CDATA[<=]]> C.CURRENT_NODE_ORD
+		              AND B.ROUTE_ORD <![CDATA[>]]> C.CURRENT_NODE_ORD)
+		            OR (A.TURN_USEFLAG = 1
+		              AND E.TURN_ORD <![CDATA[>]]> C.CURRENT_NODE_ORD
+		              AND E.TURN_ORD <![CDATA[>]]> C.CURRENT_NODE_ORD)
+		            OR (A.TURN_USEFLAG = 0
+		              AND B.ROUTE_ORD <![CDATA[>]]> C.CURRENT_NODE_ORD))
+		      )C
+		    WHERE A.ROUTE_ID = B.ROUTE_ID
+		      AND A.ROUTE_ID = C.ROUTE_ID
+		      AND B.ROUTE_ORD = C.ROUTE_ORD
+		      AND C.NODE_ID = #{stopId}
+		      AND C.CURRENT_NODE_ORD <![CDATA[<>]]> 0
+		      AND B.STOP_ORD - C.LATEST_STOP_ORD > 0
+		      AND (
+		        CASE
+		          WHEN A.TURN_USEFLAG = 1 THEN DECODE((
+		                  CASE
+		                    WHEN TURN_ORD <![CDATA[>]]> B.ROUTE_ORD THEN 1
+		                    WHEN TURN_ORD <![CDATA[<]]> B.ROUTE_ORD THEN 2
+		                    ELSE 0
+		                  END), 1, (
+		                  CASE
+		                    WHEN C.CURRENT_NODE_ORD <![CDATA[<=]]> TURN_ORD
+		                      THEN 1
+		                    ELSE 0
+		                  END), 2, (
+		                  CASE
+		                    WHEN C.CURRENT_NODE_ORD <![CDATA[>=]]> TURN_ORD
+		                      THEN 1
+		                    ELSE 0
+		                  END), 0)
+		          ELSE (
+		              CASE
+		                WHEN B.ROUTE_ORD > C.CURRENT_NODE_ORD
+		                  THEN 1
+		                ELSE 0
+		              END)
+		        END)= 1
+		    ) AA ON A.ROUTE_ID = AA.ROUTE_ID AND RANK <![CDATA[<=]]> 2, (
+		    SELECT A.STOP_ID, B.ROUTE_ID, A.STOP_NAME
+		    FROM BUSSTOP A, M_BUSROUTE_STOP B
+		    WHERE A.STOP_ID = #{stopId} 
+		     AND B.STOP_ID = A.STOP_ID      
+		    GROUP BY A.STOP_ID, B.ROUTE_ID, A.STOP_NAME
+		    )B, BUSROUTE_SECTION_EDIT C, BUSSTOP D
+		WHERE A.ROUTE_ID = B.ROUTE_ID
+		  AND A.ROUTE_STATUS = 1
+		  AND A.ROUTESECT_GROUP_ID = C.ROUTESECT_GROUP_ID
+		  AND B.STOP_ID = D.STOP_ID
+		ORDER BY PROVIDE_CODE DESC, RTIME, TO_NUMBER(TRANSLATE(A.ROUTE_NAME, '0123456789'||A.ROUTE_NAME, '0123456789'))
+	</select>
+	
+	<!-- 경로탐색 경로 조회 -->
+	<select id="selectRouteExploreList" parameterType="hashmap" resultType="egovMap">
+		SELECT
+		    DISTINCT TT.*
+		FROM
+		(
+			SELECT 
+				*
+			FROM
+			    (
+			        SELECT DECODE(XTYPE,'1',ROW_NUMBER() OVER (PARTITION BY XTYPE, ORDERED ORDER BY SEQ ASC),'2',ORDERED) ORDERED,
+			               XTYPE, SROUTEID, SROUTENO, SSTATIONID, SSTATIONNAME, ROUTESEQ_A1, ROUTESEQ_A2,
+		                   TSTATIONID, TSTATIONNAME, EROUTEID, EROUTENO, 
+                           (
+                                CASE WHEN XTYPE = 1
+                                THEN -1
+                                ELSE ROUTESEQ_B1
+                                END
+                            ) ROUTESEQ_B1,
+                            (
+                                CASE WHEN XTYPE = 1
+                                THEN -1
+                                ELSE TSERVICE_ID
+                                END
+                            ) TSERVICE_ID,
+                            (
+                                CASE WHEN XTYPE = 1
+                                THEN -1
+                                ELSE TSTOP_ID
+                                END
+                            ) TSTOP_ID,
+                            (
+                                CASE WHEN XTYPE = 1
+                                THEN -1
+                                ELSE TLAT
+                                END
+                            ) TLAT,
+                            (
+                                CASE WHEN XTYPE = 1
+                                THEN -1
+                                ELSE TLNG
+                                END
+                            ) TLNG
+                            , ROUTESEQ_B2,
+		                   ESTATIONID, ESTATIONNAME, SDISTANCE, EDISTANCE, DISTANCE, SEQ,
+		                   SLAT, SLNG, ELAT, ELNG, SSERVICE_ID, ESERVICE_ID, SSTOP_ID, ESTOP_ID
+			        FROM
+			             (SELECT DECODE(XTYPE,'1',ROW_NUMBER() OVER (PARTITION BY XTYPE, SROUTENO ORDER BY SDISTANCE + EDISTANCE ASC),
+			                                  '2',ROW_NUMBER() OVER (PARTITION BY XTYPE ORDER BY SEQ ASC)) ORDERED,
+			                     XTYPE, SROUTEID, SROUTENO, SSTATIONID, SSTATIONNAME, ROUTESEQ_A1, ROUTESEQ_A2, 
+			                     TSTATIONNAME, TSTATIONID, EROUTEID, EROUTENO, ROUTESEQ_B1, ROUTESEQ_B2, 
+			                     ESTATIONID, ESTATIONNAME, SEQ, SDISTANCE, EDISTANCE, (SDISTANCE + EDISTANCE) DISTANCE,
+			                     SLAT, SLNG, TLAT, TLNG, ELAT, ELNG, SSERVICE_ID, TSERVICE_ID, ESERVICE_ID, SSTOP_ID, TSTOP_ID, ESTOP_ID
+			              FROM
+			                   (SELECT XTYPE, SROUTEID, SROUTENO, SSTATIONID, SSTATIONNAME, ROUTESEQ_A1, SLAT, SLNG, TLAT, TLNG, ELAT, ELNG, SSERVICE_ID, TSERVICE_ID, ESERVICE_ID, SSTOP_ID, TSTOP_ID, ESTOP_ID,
+			                           DECODE(XTYPE, '1', '-', ROUTESEQ_A2) ROUTESEQ_A2,
+			                           DECODE(XTYPE, '1', '-', TSTATIONNAME) TSTATIONNAME,
+			                           DECODE(XTYPE, '1', '-', TSTATIONID) TSTATIONID, 
+			                           DECODE(XTYPE, '1', '-', EROUTEID) EROUTEID,
+			                           EROUTENO, ROUTESEQ_B1, ROUTESEQ_B2, ESTATIONID, ESTATIONNAME, SEQ,
+			                           DECODE(XTYPE, '1', (SELECT SUM(SECT_DISTANCE) FROM MV_WEB_ROUTESTATION 
+			                                                WHERE ROUTE_ID = SROUTEID AND STATION_SEQ <![CDATA[>]]> ROUTESEQ_A1 AND STATION_SEQ <![CDATA[<=]]> ROUTESEQ_B2
+			                                                GROUP BY ROUTE_ID),
+			                                        '2', (SELECT SUM(SECT_DISTANCE) FROM MV_WEB_ROUTESTATION 
+			                                            WHERE ROUTE_ID = SROUTEID AND STATION_SEQ <![CDATA[>]]> ROUTESEQ_A1 AND STATION_SEQ <![CDATA[<=]]> ROUTESEQ_A2
+			                                                GROUP BY ROUTE_ID)) SDISTANCE,
+			                            DECODE(XTYPE, '1', 0, '2', (SELECT SUM(SECT_DISTANCE) FROM MV_WEB_ROUTESTATION 
+			                                                WHERE ROUTE_ID = EROUTEID AND STATION_SEQ <![CDATA[>]]> ROUTESEQ_B1 AND STATION_SEQ <![CDATA[<=]]> ROUTESEQ_B2
+			                                                GROUP BY ROUTE_ID)) EDISTANCE
+			                    FROM 
+			                           (SELECT XTYPE, SROUTEID, 
+			                                  (SELECT ROUTE_NAME FROM BUSROUTE WHERE  ROUTE_ID = SROUTEID) SROUTENO,
+			                                   SSTATIONID, 
+			                                  (SELECT STOP_NAME FROM BUSSTOP WHERE STOP_ID = SSTATIONID) SSTATIONNAME,
+			                                  MASTATIONID TSTATIONID,
+			                                  (SELECT STOP_NAME FROM BUSSTOP WHERE STOP_ID = MASTATIONID) TSTATIONNAME,
+			                                   MAX(SSTATIONSEQ) ROUTESEQ_A1, MAX(MASTATIONSEQ) ROUTESEQ_A2,
+			                                   EROUTEID,
+			                                  (SELECT ROUTE_NAME FROM BUSROUTE WHERE  ROUTE_ID = EROUTEID) EROUTENO,
+			                                   MAX(MBSTATIONSEQ) ROUTESEQ_B1, MAX(ESTATIONSEQ) ROUTESEQ_B2,
+			                                   ESTATIONID,
+			                                  (SELECT STOP_NAME FROM BUSSTOP WHERE STOP_ID = ESTATIONID) ESTATIONNAME,
+			                                   MAX(SEQ) SEQ
+			                                   			                                   
+			                                   ,(SELECT LAT FROM BUSSTOP WHERE STOP_ID = SSTATIONID) SLAT
+								               ,(SELECT LNG FROM BUSSTOP WHERE STOP_ID = SSTATIONID) SLNG
+								               
+								               ,(SELECT LAT FROM BUSSTOP WHERE STOP_ID = MASTATIONID) TLAT
+								               ,(SELECT LNG FROM BUSSTOP WHERE STOP_ID = MASTATIONID) TLNG
+								               
+								               ,(SELECT LAT FROM BUSSTOP WHERE STOP_ID = ESTATIONID) ELAT
+								               ,(SELECT LNG FROM BUSSTOP WHERE STOP_ID = ESTATIONID) ELNG
+								               
+								               ,(SELECT SERVICE_ID FROM BUSSTOP WHERE STOP_ID = SSTATIONID) SSERVICE_ID
+								               ,(SELECT SERVICE_ID FROM BUSSTOP WHERE STOP_ID = MASTATIONID) TSERVICE_ID
+								               ,(SELECT SERVICE_ID FROM BUSSTOP WHERE STOP_ID = ESTATIONID) ESERVICE_ID
+								               
+								               ,(SELECT STOP_ID FROM BUSSTOP WHERE STOP_ID = SSTATIONID) SSTOP_ID
+								               ,(SELECT STOP_ID FROM BUSSTOP WHERE STOP_ID = MASTATIONID) TSTOP_ID
+								               ,(SELECT STOP_ID FROM BUSSTOP WHERE STOP_ID = ESTATIONID) ESTOP_ID
+			                            FROM
+			                                 (SELECT *
+			                                  FROM
+			                                     (SELECT XTYPE, SROUTEID, SSTATIONID, MASTATIONID,
+			                                            MAX(SSTATIONSEQ) SSTATIONSEQ, MAX(MASTATIONSEQ) MASTATIONSEQ, 
+			                                            EROUTEID, ESTATIONID,
+			                                            MAX(MBSTATIONSEQ) MBSTATIONSEQ, MAX(ESTATIONSEQ) ESTATIONSEQ,
+			                                            ((MAX(MASTATIONSEQ) - MAX(SSTATIONSEQ)) + ABS(MAX(ESTATIONSEQ) - MAX(MBSTATIONSEQ))) SEQ,
+			                                            ROW_NUMBER() OVER(PARTITION BY XTYPE, SROUTEID, EROUTEID ORDER BY 
+			                                            ((MAX(MASTATIONSEQ) - MAX(SSTATIONSEQ)) + ABS(MAX(ESTATIONSEQ) - MAX(MBSTATIONSEQ)))) ORDERD
+			                                            <!-- 
+			                                            ,
+			                                            RANK() OVER (ORDER BY ((MAX(MASTATIONSEQ) - MAX(SSTATIONSEQ)) + ABS(MAX(ESTATIONSEQ) - MAX(MBSTATIONSEQ))) ASC) RANK
+			                                             -->
+			                                      FROM 
+			                                           (SELECT 
+			                                                   TA.ROUTE_ID MAROUTEID, TA.STATION_ID MASTATIONID, TA.STATION_SEQ MASTATIONSEQ,
+			                                                   TB.ROUTE_ID MBROUTEID, TB.STATION_ID MBSTATIONID, TB.STATION_SEQ MBSTATIONSEQ
+			                                            FROM  MV_WEB_ROUTESTATION TA, MV_WEB_ROUTESTATION TB
+			                                            WHERE TA.STATION_ID = TB.STATION_ID
+			                                            AND   TA.ROUTE_ID IN 
+			                                                 (SELECT DISTINCT(T2.ROUTE_ID)
+			                                                  FROM  (SELECT STOP_ID FROM   BUSSTOP 
+			                                                         WHERE STOP_ID = #{st_stop_id}   
+                                                                     OR     STOP_ID = #{ed_stop_id}  
+			                                                         ) T1, MV_WEB_ROUTESTATION T2
+			                                                  WHERE  T2.STATION_ID = T1.STOP_ID)
+			                                           ) TBA,
+			                                           (SELECT TA.STATION_ID SSTATIONID, TA.ROUTE_ID SROUTEID, MAX(TA.STATION_SEQ) SSTATIONSEQ,
+			                                                   TB.STATION_ID ESTATIONID, TB.ROUTE_ID EROUTEID,
+			                                                   MAX(TB.STATION_SEQ) ESTATIONSEQ, DECODE(TA.ROUTE_ID, TB.ROUTE_ID, 1, 2) XTYPE                                                         
+			                                            FROM    
+			                                                   (SELECT T2.ROUTE_ID, T2.STATION_ID, T2.STATION_SEQ
+			                                                    FROM   BUSSTOP T1, MV_WEB_ROUTESTATION T2 
+			                                                    WHERE  T1.STOP_ID = T2.STATION_ID
+			                                                    AND    STOP_ID = #{st_stop_id}) TA,
+			                                                       
+			                                                   (SELECT T2.ROUTE_ID, T2.STATION_ID, T2.STATION_SEQ
+			                                                    FROM   BUSSTOP T1, MV_WEB_ROUTESTATION T2
+			                                                    WHERE  T1.STOP_ID = T2.STATION_ID
+			                                                    AND    STOP_ID = #{ed_stop_id}) TB
+			                                             GROUP BY TA.STATION_ID, TA.ROUTE_ID, TB.STATION_ID, TB.ROUTE_ID
+			                                          )TBB    
+			                                      WHERE TBA.MAROUTEID = TBB.SROUTEID
+			                                      AND   TBA.MBROUTEID = TBB.EROUTEID
+			                                      AND   TO_NUMBER(TBA.MASTATIONSEQ) <![CDATA[>]]> TO_NUMBER(TBB.SSTATIONSEQ)
+			                                      AND   TO_NUMBER(TBA.MBSTATIONSEQ) <![CDATA[<]]> TO_NUMBER(TBB.ESTATIONSEQ)
+			                                      GROUP BY XTYPE, SROUTEID, SSTATIONID, MASTATIONID, EROUTEID, ESTATIONID
+			                                     )
+			                                     WHERE ORDERD = '1'
+			                                     	<!-- AND RANK <![CDATA[<=]]> 3 -->
+			                                  ) TM1        
+			                            GROUP BY XTYPE, SROUTEID, SSTATIONID, MASTATIONID, EROUTEID, ESTATIONID
+			                        )
+			                    )
+			              )
+			        WHERE ORDERED IN (DECODE(XTYPE,1,'1'), DECODE(XTYPE,2,'1'), DECODE(XTYPE,2,'2'), DECODE(XTYPE,2,'3'), DECODE(XTYPE,2,'4'))
+			        AND ((XTYPE = 1 AND (ROUTESEQ_A1 <![CDATA[<]]> ROUTESEQ_B2)) OR (XTYPE = 2 AND (ROUTESEQ_A1 <![CDATA[<]]> ROUTESEQ_A2 AND ROUTESEQ_B1 <![CDATA[<]]> ROUTESEQ_B2)))
+			    )
+			<!-- WHERE ORDERED <![CDATA[<]]> 5 -->
+			ORDER BY XTYPE, SEQ, DISTANCE
+		)TT
+<!-- 		WHERE ROWNUM <![CDATA[<=]]> 4	 -->
+		ORDER BY XTYPE, SEQ, DISTANCE
+	</select>
+
+	<!-- 경로탐색 경로 조회2 -->
+	<select id="selectRouteExploreList2" parameterType="hashmap" resultType="egovMap">
+		SELECT
+		    DISTINCT TT.*
+		FROM
+		(
+			SELECT 
+				*
+			FROM
+			    (
+			        SELECT DECODE(XTYPE,'1',ROW_NUMBER() OVER (PARTITION BY XTYPE, ORDERED ORDER BY SEQ ASC),'2',ORDERED) ORDERED,
+			               XTYPE, SROUTEID, SROUTENO, SSTATIONID, SSTATIONNAME, ROUTESEQ_A1, ROUTESEQ_A2,
+		                   TSTATIONID, TSTATIONNAME, EROUTEID, EROUTENO, 
+                           (
+                                CASE WHEN XTYPE = 1
+                                THEN -1
+                                ELSE ROUTESEQ_B1
+                                END
+                            ) ROUTESEQ_B1,
+                            (
+                                CASE WHEN XTYPE = 1
+                                THEN -1
+                                ELSE TSERVICE_ID
+                                END
+                            ) TSERVICE_ID,
+                            (
+                                CASE WHEN XTYPE = 1
+                                THEN -1
+                                ELSE TSTOP_ID
+                                END
+                            ) TSTOP_ID,
+                            (
+                                CASE WHEN XTYPE = 1
+                                THEN -1
+                                ELSE TLAT
+                                END
+                            ) TLAT,
+                            (
+                                CASE WHEN XTYPE = 1
+                                THEN -1
+                                ELSE TLNG
+                                END
+                            ) TLNG
+                            , ROUTESEQ_B2,
+		                   ESTATIONID, ESTATIONNAME, SDISTANCE, EDISTANCE, DISTANCE, SEQ,
+		                   SLAT, SLNG, ELAT, ELNG, SSERVICE_ID, ESERVICE_ID, SSTOP_ID, ESTOP_ID
+			        FROM
+			             (SELECT DECODE(XTYPE,'1',ROW_NUMBER() OVER (PARTITION BY XTYPE, SROUTENO ORDER BY SDISTANCE + EDISTANCE ASC),
+			                                  '2',ROW_NUMBER() OVER (PARTITION BY XTYPE ORDER BY SEQ ASC)) ORDERED,
+			                     XTYPE, SROUTEID, SROUTENO, SSTATIONID, SSTATIONNAME, ROUTESEQ_A1, ROUTESEQ_A2, 
+			                     TSTATIONNAME, TSTATIONID, EROUTEID, EROUTENO, ROUTESEQ_B1, ROUTESEQ_B2, 
+			                     ESTATIONID, ESTATIONNAME, SEQ, SDISTANCE, EDISTANCE, (SDISTANCE + EDISTANCE) DISTANCE,
+			                     SLAT, SLNG, TLAT, TLNG, ELAT, ELNG, SSERVICE_ID, TSERVICE_ID, ESERVICE_ID, SSTOP_ID, TSTOP_ID, ESTOP_ID
+			              FROM
+			                   (SELECT XTYPE, SROUTEID, SROUTENO, SSTATIONID, SSTATIONNAME, ROUTESEQ_A1, SLAT, SLNG, TLAT, TLNG, ELAT, ELNG, SSERVICE_ID, TSERVICE_ID, ESERVICE_ID, SSTOP_ID, TSTOP_ID, ESTOP_ID,
+			                           DECODE(XTYPE, '1', '-', ROUTESEQ_A2) ROUTESEQ_A2,
+			                           DECODE(XTYPE, '1', '-', TSTATIONNAME) TSTATIONNAME,
+			                           DECODE(XTYPE, '1', '-', TSTATIONID) TSTATIONID, 
+			                           DECODE(XTYPE, '1', '-', EROUTEID) EROUTEID,
+			                           EROUTENO, ROUTESEQ_B1, ROUTESEQ_B2, ESTATIONID, ESTATIONNAME, SEQ,
+			                           DECODE(XTYPE, '1', (SELECT SUM(SECT_DISTANCE) FROM MV_WEB_ROUTESTATION 
+			                                                WHERE ROUTE_ID = SROUTEID AND STATION_SEQ <![CDATA[>]]> ROUTESEQ_A1 AND STATION_SEQ <![CDATA[<=]]> ROUTESEQ_B2
+			                                                GROUP BY ROUTE_ID),
+			                                        '2', (SELECT SUM(SECT_DISTANCE) FROM MV_WEB_ROUTESTATION 
+			                                            WHERE ROUTE_ID = SROUTEID AND STATION_SEQ <![CDATA[>]]> ROUTESEQ_A1 AND STATION_SEQ <![CDATA[<=]]> ROUTESEQ_A2
+			                                                GROUP BY ROUTE_ID)) SDISTANCE,
+			                            DECODE(XTYPE, '1', 0, '2', (SELECT SUM(SECT_DISTANCE) FROM MV_WEB_ROUTESTATION 
+			                                                WHERE ROUTE_ID = EROUTEID AND STATION_SEQ <![CDATA[>]]> ROUTESEQ_B1 AND STATION_SEQ <![CDATA[<=]]> ROUTESEQ_B2
+			                                                GROUP BY ROUTE_ID)) EDISTANCE
+			                    FROM 
+			                           (SELECT XTYPE, SROUTEID, 
+			                                  (SELECT ROUTE_NAME FROM BUSROUTE WHERE  ROUTE_ID = SROUTEID) SROUTENO,
+			                                   SSTATIONID, 
+			                                  (SELECT STOP_NAME FROM BUSSTOP WHERE STOP_ID = SSTATIONID) SSTATIONNAME,
+			                                  MASTATIONID TSTATIONID,
+			                                  (SELECT STOP_NAME FROM BUSSTOP WHERE STOP_ID = MASTATIONID) TSTATIONNAME,
+			                                   MAX(SSTATIONSEQ) ROUTESEQ_A1, MAX(MASTATIONSEQ) ROUTESEQ_A2,
+			                                   EROUTEID,
+			                                  (SELECT ROUTE_NAME FROM BUSROUTE WHERE  ROUTE_ID = EROUTEID) EROUTENO,
+			                                   MAX(MBSTATIONSEQ) ROUTESEQ_B1, MAX(ESTATIONSEQ) ROUTESEQ_B2,
+			                                   ESTATIONID,
+			                                  (SELECT STOP_NAME FROM BUSSTOP WHERE STOP_ID = ESTATIONID) ESTATIONNAME,
+			                                   MAX(SEQ) SEQ
+			                                   			                                   
+			                                   ,(SELECT LAT FROM BUSSTOP WHERE STOP_ID = SSTATIONID) SLAT
+								               ,(SELECT LNG FROM BUSSTOP WHERE STOP_ID = SSTATIONID) SLNG
+								               
+								               ,(SELECT LAT FROM BUSSTOP WHERE STOP_ID = MASTATIONID) TLAT
+								               ,(SELECT LNG FROM BUSSTOP WHERE STOP_ID = MASTATIONID) TLNG
+								               
+								               ,(SELECT LAT FROM BUSSTOP WHERE STOP_ID = ESTATIONID) ELAT
+								               ,(SELECT LNG FROM BUSSTOP WHERE STOP_ID = ESTATIONID) ELNG
+								               
+								               ,(SELECT SERVICE_ID FROM BUSSTOP WHERE STOP_ID = SSTATIONID) SSERVICE_ID
+								               ,(SELECT SERVICE_ID FROM BUSSTOP WHERE STOP_ID = MASTATIONID) TSERVICE_ID
+								               ,(SELECT SERVICE_ID FROM BUSSTOP WHERE STOP_ID = ESTATIONID) ESERVICE_ID
+								               
+								               ,(SELECT STOP_ID FROM BUSSTOP WHERE STOP_ID = SSTATIONID) SSTOP_ID
+								               ,(SELECT STOP_ID FROM BUSSTOP WHERE STOP_ID = MASTATIONID) TSTOP_ID
+								               ,(SELECT STOP_ID FROM BUSSTOP WHERE STOP_ID = ESTATIONID) ESTOP_ID
+			                            FROM
+			                                 (
+			                                 SELECT *
+			                                  FROM
+			                                     (SELECT XTYPE, SROUTEID, SSTATIONID, MASTATIONID,
+			                                            MAX(SSTATIONSEQ) SSTATIONSEQ, MAX(MASTATIONSEQ) MASTATIONSEQ, 
+			                                            EROUTEID, ESTATIONID,
+			                                            MAX(MBSTATIONSEQ) MBSTATIONSEQ, MAX(ESTATIONSEQ) ESTATIONSEQ,
+			                                            ((MAX(MASTATIONSEQ) - MAX(SSTATIONSEQ)) + ABS(MAX(ESTATIONSEQ) - MAX(MBSTATIONSEQ))) SEQ,
+			                                            ROW_NUMBER() OVER(PARTITION BY XTYPE, SROUTEID, EROUTEID ORDER BY 
+			                                            ((MAX(MASTATIONSEQ) - MAX(SSTATIONSEQ)) + ABS(MAX(ESTATIONSEQ) - MAX(MBSTATIONSEQ)))) ORDERD
+
+			                                      FROM 
+			                                           (SELECT 
+			                                                   TA.ROUTE_ID MAROUTEID, TA.STATION_ID MASTATIONID, TA.STATION_SEQ MASTATIONSEQ,
+			                                                   TB.ROUTE_ID MBROUTEID, TB.STATION_ID MBSTATIONID, TB.STATION_SEQ MBSTATIONSEQ
+			                                            FROM  MV_WEB_ROUTESTATION TA, MV_WEB_ROUTESTATION TB
+			                                            WHERE TA.STATION_ID = TB.STATION_ID
+			                                            AND   TA.ROUTE_ID IN 
+			                                                 (SELECT DISTINCT(T2.ROUTE_ID)
+			                                                  FROM  ( SELECT D.STOP_ID FROM BUSSTOP S,BUSSTOP D WHERE (S.STOP_ID = #{st_stop_id} OR S.STOP_ID = #{ed_stop_id} ) AND Sqrt(Power(S.LAT-D.LAT,2)+Power(S.LNG-D.LNG,2))<![CDATA[<]]>0.002 AND ROWNUM<![CDATA[<]]>5
+			                                                         ) T1, MV_WEB_ROUTESTATION T2
+			                                                  WHERE  T2.STATION_ID = T1.STOP_ID)
+			                                           ) TBA,
+			                                           (SELECT TA.STATION_ID SSTATIONID, TA.ROUTE_ID SROUTEID, MAX(TA.STATION_SEQ) SSTATIONSEQ,
+			                                                   TB.STATION_ID ESTATIONID, TB.ROUTE_ID EROUTEID,
+			                                                   MAX(TB.STATION_SEQ) ESTATIONSEQ, DECODE(TA.ROUTE_ID, TB.ROUTE_ID, 1, 2) XTYPE                                                         
+			                                            FROM    
+			                                                   (SELECT T2.ROUTE_ID, T2.STATION_ID, T2.STATION_SEQ
+			                                                    FROM   BUSSTOP T1, MV_WEB_ROUTESTATION T2 
+			                                                    WHERE  T1.STOP_ID = T2.STATION_ID
+			                                                    AND    STOP_ID IN (SELECT D.STOP_ID FROM BUSSTOP S,BUSSTOP D WHERE S.STOP_ID = #{st_stop_id} AND Sqrt(Power(S.LAT-D.LAT,2)+Power(S.LNG-D.LNG,2))<![CDATA[<]]>0.002 AND ROWNUM<![CDATA[<]]>3)) TA,
+			                                                       
+			                                                   (SELECT T2.ROUTE_ID, T2.STATION_ID, T2.STATION_SEQ
+			                                                    FROM   BUSSTOP T1, MV_WEB_ROUTESTATION T2
+			                                                    WHERE  T1.STOP_ID = T2.STATION_ID
+			                                                    AND    STOP_ID IN (SELECT D.STOP_ID FROM BUSSTOP S,BUSSTOP D WHERE S.STOP_ID = #{ed_stop_id} AND Sqrt(Power(S.LAT-D.LAT,2)+Power(S.LNG-D.LNG,2))<![CDATA[<]]>0.002 AND ROWNUM<![CDATA[<]]>3)) TB 
+			                                             GROUP BY TA.STATION_ID, TA.ROUTE_ID, TB.STATION_ID, TB.ROUTE_ID
+			                                          )TBB    
+			                                      WHERE TBA.MAROUTEID = TBB.SROUTEID
+			                                      AND   TBA.MBROUTEID = TBB.EROUTEID
+			                                      AND   TO_NUMBER(TBA.MASTATIONSEQ) <![CDATA[>]]> TO_NUMBER(TBB.SSTATIONSEQ)
+			                                      AND   TO_NUMBER(TBA.MBSTATIONSEQ) <![CDATA[<]]> TO_NUMBER(TBB.ESTATIONSEQ)
+			                                      GROUP BY XTYPE, SROUTEID, SSTATIONID, MASTATIONID, EROUTEID, ESTATIONID
+                                            ORDER BY SEQ
+			                                     )
+			                                     WHERE ORDERD = '1' 
+<!-- 			                                     AND ROWNUM<![CDATA[<]]>6 -->
+			                                 
+			                                     	<!-- AND RANK <![CDATA[<=]]> 3 -->
+			                                  ) TM1        
+			                            GROUP BY XTYPE, SROUTEID, SSTATIONID, MASTATIONID, EROUTEID, ESTATIONID
+			                        )
+			                    )
+			              )
+			        WHERE ORDERED IN (DECODE(XTYPE,1,'1'), DECODE(XTYPE,2,'1'), DECODE(XTYPE,2,'2'), DECODE(XTYPE,2,'3'), DECODE(XTYPE,2,'4'))
+			        AND ((XTYPE = 1 AND (ROUTESEQ_A1 <![CDATA[<]]> ROUTESEQ_B2)) OR (XTYPE = 2 AND (ROUTESEQ_A1 <![CDATA[<]]> ROUTESEQ_A2 AND ROUTESEQ_B1 <![CDATA[<]]> ROUTESEQ_B2)))
+			    )
+			<!-- WHERE ORDERED <![CDATA[<]]> 5 -->
+			ORDER BY XTYPE, SEQ, DISTANCE
+		)TT
+<!-- 		WHERE ROWNUM <![CDATA[<=]]> 4	 -->
+		ORDER BY XTYPE, SEQ, DISTANCE
+	</select>
+		
+	<!-- 경로 탐색 환승 지도 정보 검색 -->
+ 	<select id="selectBusRouteExpMapList" parameterType="hashmap" resultType="egovMap">
+		SELECT
+		    *
+		FROM(
+		
+		SELECT 
+		    LINKS.LINK_LIST AS LINK_ID
+		    ,LINKS.ROUTE_ORD
+		    ,LINKS.SECT_DISTANCE
+		    ,VTX.ORD
+		    ,VTX.LAT
+		    ,VTX.LNG
+		    ,LINKS.LINK_LEN
+		    ,ROUTE_TYPE
+		    ,ROUTE_ID
+		    ,ED_NODE_ID
+		    ,'0' AS SEQ
+		    ,RANK() OVER (ORDER BY 
+                (SELECT
+                    round(( 
+                        ( 
+                            (
+                                acos(
+                                    sin( VTX.LAT * round(acos(-1), 7) /180.0 ) * 
+                                    sin( LAT * round(acos(-1), 7) /180.0 ) + 
+                                    cos( VTX.LAT * round(acos(-1), 7) /180.0 )  * 
+                                    cos( LAT * round(acos(-1), 7) /180.0 ) * 
+                                    cos( (VTX.LNG - LNG ) * round(acos(-1), 7) /180.0  ) 
+                                ) 
+                            ) *  180.0 / round(acos(-1), 7) 
+                        ) * 60 * 1.1515 * 1.609344 * 1000 
+                    ), 0) 
+                FROM BUSSTOP
+                WHERE STOP_ID = #{st_stop_id}), ROWNUM
+            ) ST_RANK
+            ,-1 ED_RANK
+		 FROM 
+		 ( 
+		    SELECT RTL.ED_NODE_ID, RTL.ROUTE_ORD, RTL.LINK_ID, DECODE(RTL.LINK_ID,LAG(RTL.LINK_ID, 1) OVER(ORDER BY RTL.ROUTE_ORD ASC), '', RTL.LINK_ID) AS LINK_LIST, RTL.SECT_DISTANCE, LK.LINK_LEN, ROUTE_TYPE, ROUTE_ID
+		    FROM 
+		    LINK LK,
+		    ( 
+		         SELECT B.*, A.LINK_ID, A.ROUTE_ORD, A.SECT_DISTANCE, BR.ROUTE_TYPE, BR.ROUTE_ID, A.ED_NODE_ID
+		         FROM BUSROUTE BR, BUSROUTE_SECTION_DETAIL_EDIT A, BISNODE B 
+		         WHERE A.ED_NODE_ID = B.NODE_ID 
+		         AND BR.ROUTE_ID = #{stRouteId}
+		         AND BR.ROUTESECT_GROUP_ID  = A.ROUTESECT_GROUP_ID
+		         ORDER BY ROUTE_ORD                      
+		    ) RTL                                         
+		    WHERE LK.LINK_ID = RTL.LINK_ID
+			    AND RTL.ROUTE_ORD <![CDATA[>=]]> (SELECT ROUTE_EDIT_ORD 
+												FROM M_BUSROUTE_SECTION_DETAIL BSD
+													,( SELECT *  FROM M_BUSROUTE_STOP WHERE ROUTE_ID = #{stRouteId} AND STOP_ORD = #{sStOrd}) VBS
+												WHERE BSD.ROUTE_ORD = VBS.ROUTE_ORD
+												    AND BSD.ROUTESECT_GROUP_ID = VBS.ROUTESECT_GROUP_ID)  
+												    
+		         AND RTL.ROUTE_ORD <![CDATA[<=]]> (SELECT ROUTE_EDIT_ORD 
+												FROM M_BUSROUTE_SECTION_DETAIL BSD
+													,( SELECT *  FROM M_BUSROUTE_STOP WHERE ROUTE_ID = #{stRouteId} AND STOP_ORD = #{sEdOrd}) VBS
+												WHERE BSD.ROUTE_ORD = VBS.ROUTE_ORD
+												    AND BSD.ROUTESECT_GROUP_ID = VBS.ROUTESECT_GROUP_ID) 
+		 ) LINKS,                                    
+		 LINK_VERTEX VTX                           
+		 WHERE LINK_LIST IS NOT NULL             
+		     AND LINKS.LINK_LIST = VTX.LINK_ID 
+		     
+		UNION ALL
+		
+		SELECT 
+		    LINKS.LINK_LIST AS LINK_ID
+		    ,LINKS.ROUTE_ORD
+		    ,LINKS.SECT_DISTANCE
+		    ,VTX.ORD
+		    ,VTX.LAT
+		    ,VTX.LNG
+		    ,LINKS.LINK_LEN
+		    ,ROUTE_TYPE
+		    ,ROUTE_ID
+		    ,ED_NODE_ID
+		    ,'1' AS SEQ
+		    ,-1 ST_RANK
+		    ,RANK() OVER (ORDER BY 
+                (SELECT
+                    round(( 
+                        ( 
+                            (
+                                acos(
+                                    sin( VTX.LAT * round(acos(-1), 7) /180.0 ) * 
+                                    sin( LAT * round(acos(-1), 7) /180.0 ) + 
+                                    cos( VTX.LAT * round(acos(-1), 7) /180.0 )  * 
+                                    cos( LAT * round(acos(-1), 7) /180.0 ) * 
+                                    cos( (VTX.LNG - LNG ) * round(acos(-1), 7) /180.0  ) 
+                                ) 
+                            ) *  180.0 / round(acos(-1), 7) 
+                        ) * 60 * 1.1515 * 1.609344 * 1000 
+                    ), 0) 
+                FROM BUSSTOP
+                WHERE STOP_ID = #{ed_stop_id}), ROWNUM
+            ) ED_RANK
+		 FROM 
+		 ( 
+		    SELECT RTL.ED_NODE_ID, RTL.ROUTE_ORD, RTL.LINK_ID, DECODE(RTL.LINK_ID,LAG(RTL.LINK_ID, 1) OVER(ORDER BY RTL.ROUTE_ORD ASC), '', RTL.LINK_ID) AS LINK_LIST, RTL.SECT_DISTANCE, LK.LINK_LEN, ROUTE_TYPE, ROUTE_ID
+		    FROM 
+		    LINK LK,
+		    ( 
+		         SELECT B.*, A.LINK_ID, A.ROUTE_ORD, A.SECT_DISTANCE, BR.ROUTE_TYPE, BR.ROUTE_ID, A.ED_NODE_ID
+		         FROM BUSROUTE BR, BUSROUTE_SECTION_DETAIL_EDIT A, BISNODE B 
+		         WHERE A.ED_NODE_ID = B.NODE_ID 
+		         AND BR.ROUTE_ID = #{edRouteId}
+		         AND BR.ROUTESECT_GROUP_ID  = A.ROUTESECT_GROUP_ID
+		         ORDER BY ROUTE_ORD                      
+		    ) RTL                                         
+		    WHERE LK.LINK_ID = RTL.LINK_ID
+			    AND RTL.ROUTE_ORD <![CDATA[>=]]>  (SELECT ROUTE_EDIT_ORD 
+												FROM M_BUSROUTE_SECTION_DETAIL BSD
+													,( SELECT *  FROM M_BUSROUTE_STOP WHERE ROUTE_ID = #{edRouteId} AND STOP_ORD = #{eStOrd}) VBS
+												WHERE BSD.ROUTE_ORD = VBS.ROUTE_ORD
+												    AND BSD.ROUTESECT_GROUP_ID = VBS.ROUTESECT_GROUP_ID) 
+												    
+		         AND RTL.ROUTE_ORD <![CDATA[<=]]>  (SELECT ROUTE_EDIT_ORD 
+												FROM M_BUSROUTE_SECTION_DETAIL BSD
+													,( SELECT *  FROM M_BUSROUTE_STOP WHERE ROUTE_ID = #{edRouteId} AND STOP_ORD = #{eEdOrd}) VBS
+												WHERE BSD.ROUTE_ORD = VBS.ROUTE_ORD
+												    AND BSD.ROUTESECT_GROUP_ID = VBS.ROUTESECT_GROUP_ID) 
+		 ) LINKS,                                    
+		 LINK_VERTEX VTX                           
+		 WHERE LINK_LIST IS NOT NULL             
+		     AND LINKS.LINK_LIST = VTX.LINK_ID 
+		)
+		ORDER BY SEQ, ROUTE_ORD, ORD
+	</select>
+	
+	<!-- 경로 탐색 무환승 지도 정보 검색 -->
+	<select id="selectBusRouteExpMapList1" parameterType="hashmap" resultType="egovMap">
+		SELECT
+		    *
+		FROM(
+		
+		SELECT 
+		    LINKS.LINK_LIST AS LINK_ID
+		    ,LINKS.ROUTE_ORD
+		    ,LINKS.SECT_DISTANCE
+		    ,VTX.ORD
+		    ,VTX.LAT
+		    ,VTX.LNG
+		    ,LINKS.LINK_LEN
+		    ,ROUTE_TYPE
+		    ,ROUTE_ID
+		    ,ED_NODE_ID
+		    ,0 AS SEQ
+		    ,RANK() OVER (ORDER BY 
+                (SELECT
+                    round(( 
+                        ( 
+                            (
+                                acos(
+                                    sin( VTX.LAT * round(acos(-1), 7) /180.0 ) * 
+                                    sin( LAT * round(acos(-1), 7) /180.0 ) + 
+                                    cos( VTX.LAT * round(acos(-1), 7) /180.0 )  * 
+                                    cos( LAT * round(acos(-1), 7) /180.0 ) * 
+                                    cos( (VTX.LNG - LNG ) * round(acos(-1), 7) /180.0  ) 
+                                ) 
+                            ) *  180.0 / round(acos(-1), 7) 
+                        ) * 60 * 1.1515 * 1.609344 * 1000 
+                    ), 0) 
+                FROM BUSSTOP
+                WHERE STOP_ID = #{st_stop_id}), ROWNUM
+            ) ST_RANK
+            ,RANK() OVER (ORDER BY 
+                (SELECT
+                    round(( 
+                        ( 
+                            (
+                                acos(
+                                    sin( VTX.LAT * round(acos(-1), 7) /180.0 ) * 
+                                    sin( LAT * round(acos(-1), 7) /180.0 ) + 
+                                    cos( VTX.LAT * round(acos(-1), 7) /180.0 )  * 
+                                    cos( LAT * round(acos(-1), 7) /180.0 ) * 
+                                    cos( (VTX.LNG - LNG ) * round(acos(-1), 7) /180.0  ) 
+                                ) 
+                            ) *  180.0 / round(acos(-1), 7) 
+                        ) * 60 * 1.1515 * 1.609344 * 1000 
+                    ), 0) 
+                FROM BUSSTOP
+                WHERE STOP_ID = #{ed_stop_id}), ROWNUM
+            ) ED_RANK
+		 FROM 
+		 ( 
+		    SELECT RTL.ED_NODE_ID, RTL.ROUTE_ORD, RTL.LINK_ID, DECODE(RTL.LINK_ID,LAG(RTL.LINK_ID, 1) OVER(ORDER BY RTL.ROUTE_ORD ASC), '', RTL.LINK_ID) AS LINK_LIST, RTL.SECT_DISTANCE, LK.LINK_LEN, ROUTE_TYPE, ROUTE_ID
+		    FROM 
+		    LINK LK,
+		    ( 
+		         SELECT B.*, A.LINK_ID, A.ROUTE_ORD, A.SECT_DISTANCE, BR.ROUTE_TYPE, BR.ROUTE_ID, A.ED_NODE_ID
+		         FROM BUSROUTE BR, BUSROUTE_SECTION_DETAIL_EDIT A, BISNODE B 
+		         WHERE A.ED_NODE_ID = B.NODE_ID 
+		         AND BR.ROUTE_ID = #{stRouteId}
+		         AND BR.ROUTESECT_GROUP_ID  = A.ROUTESECT_GROUP_ID
+		         ORDER BY ROUTE_ORD                      
+		    ) RTL                                         
+		    WHERE LK.LINK_ID = RTL.LINK_ID
+		    	AND RTL.ROUTE_ORD <![CDATA[>=]]>  (SELECT ROUTE_EDIT_ORD 
+												FROM M_BUSROUTE_SECTION_DETAIL BSD
+													,( SELECT *  FROM M_BUSROUTE_STOP WHERE ROUTE_ID = #{stRouteId} AND STOP_ORD = #{sStOrd}) VBS
+												WHERE BSD.ROUTE_ORD = VBS.ROUTE_ORD
+												    AND BSD.ROUTESECT_GROUP_ID = VBS.ROUTESECT_GROUP_ID) 
+												    
+		         AND RTL.ROUTE_ORD <![CDATA[<=]]>  (SELECT ROUTE_EDIT_ORD 
+												FROM M_BUSROUTE_SECTION_DETAIL BSD
+													,( SELECT *  FROM M_BUSROUTE_STOP WHERE ROUTE_ID = #{stRouteId} AND STOP_ORD = #{eEdOrd}) VBS
+												WHERE BSD.ROUTE_ORD = VBS.ROUTE_ORD
+												    AND BSD.ROUTESECT_GROUP_ID = VBS.ROUTESECT_GROUP_ID) 
+		 ) LINKS,                                    
+		 LINK_VERTEX VTX                           
+		 WHERE LINK_LIST IS NOT NULL             
+		     AND LINKS.LINK_LIST = VTX.LINK_ID 
+		)
+		ORDER BY SEQ, ROUTE_ORD, ORD
+	</select>
+	
+	<!-- 버스 노선 검색 -->
+	<select id="selectBusRoute" parameterType="hashmap" resultType="egovMap">
+		SELECT 
+		    A.ROUTE_ID
+		    ,A.ROUTE_NAME||DECODE(A.ROUTE_SUBID, 'A' , '' , 'B', '-1', 'C', '-2', 'D', '-3', A.ROUTE_SUBID) ROUTE_NAME
+		    ,A.ROUTE_SUBID
+		    ,A.ROUTE_TYPE
+		    ,A.ROUTE_DIRECTION
+		    ,A.ROUTE_EXPLAIN
+		    ,(
+		        SELECT
+		            STOP_NAME
+		        FROM BUSSTOP
+		        WHERE B.ST_STOP_ID = STOP_ID
+		     ) AS ST_STOP_NAME
+		     ,(
+		        SELECT
+		            STOP_NAME
+		        FROM BUSSTOP
+		        WHERE B.ED_STOP_ID = STOP_ID
+		     ) AS ED_STOP_NAME
+			,CASE WHEN
+			(
+			    SELECT
+		            COUNT(*)
+		        FROM BUS_TIME_TABLE
+		        WHERE A.ROUTE_ID = ROUTE_ID
+		        	AND DECODE(TO_CHAR(SYSDATE, 'd'), 1, HOLIDY_OPERATION_FLAG , 7, SAT_OPERATION_FLAG, WEEK_OPERATION_FLAG) = 1
+			) = 0              
+			THEN '운행없음'
+			ELSE 
+			'1일  ' ||
+			 (
+			    SELECT
+		            COUNT(*)
+		        FROM BUS_TIME_TABLE
+		        WHERE A.ROUTE_ID = ROUTE_ID
+		        	AND DECODE(TO_CHAR(SYSDATE, 'd'), 1, HOLIDY_OPERATION_FLAG , 7, SAT_OPERATION_FLAG, WEEK_OPERATION_FLAG) = 1
+			)
+			|| '회 운행'
+			END AS ALLOC_TIME
+		FROM BUSROUTE A, BUSROUTE_SECTION_EDIT B
+		WHERE 0 = 0
+			AND ROUTE_STATUS = 1
+		   <if test='route_name != null'>
+		   		AND A.ROUTE_NAME = #{route_name}
+		   </if>
+		   <if test='area_code != null'>
+		   		AND A.AREA_CODE = #{area_code}
+		   </if>
+		   AND A.ROUTESECT_GROUP_ID = B.ROUTESECT_GROUP_ID
+		ORDER BY A.ROUTE_TYPE, ROUTE_NAME, A.ROUTE_ID
+	</select>
+	
+	<!-- 내주변 정류장 조회 -->
+	<select id="selectSurroundStopList" parameterType="hashmap" resultType="egovMap">
+		SELECT
+    		STOP_NAME
+    		,STOP_ID
+    		,NVL(TO_CHAR(SERVICE_ID), 'ID 없음') SERVICE_ID
+    		,LAT
+    		,LNG
+    		,round(( 
+            	( 
+                    (
+                        acos(
+                            sin( #{lat} * round(acos(-1), 7) /180.0 ) * 
+                            sin( LAT * round(acos(-1), 7) /180.0 ) + 
+                            cos( #{lat} * round(acos(-1), 7) /180.0 )  * 
+                            cos( LAT * round(acos(-1), 7) /180.0 ) * 
+                            cos( (#{lng} - LNG ) * round(acos(-1), 7) /180.0  ) 
+                        ) 
+                    ) *  180.0 / round(acos(-1), 7) 
+                ) * 60 * 1.1515 * 1.609344 * 1000 
+            ), 0) as DISTANCE
+			FROM BUSSTOP
+			WHERE 0 = 0
+    		AND round(( 
+                ( 
+                    (
+                        acos(
+                            sin( #{lat} * round(acos(-1), 7) /180.0 ) * 
+                            sin( LAT * round(acos(-1), 7) /180.0 ) + 
+                            cos( #{lat} * round(acos(-1), 7) /180.0 )  * 
+                            cos( LAT * round(acos(-1), 7) /180.0 ) * 
+                            cos( (#{lng} - LNG ) * round(acos(-1), 7) /180.0  ) 
+                        ) 
+                    ) *  180.0 / round(acos(-1), 7) 
+                ) * 60 * 1.1515 * 1.609344 * 1000 
+            ), 0) <![CDATA[<=]]> 500
+            ORDER BY DISTANCE
+	</select>
+	
+	<!-- 버스 노선 경유 정류장 간편 검색 -->
+	<select id="selectBusRoutePassStopList" parameterType="hashmap" resultType="egovMap">
+		SELECT 
+		    A.ROUTE_ID
+		    ,A.ROUTE_NAME
+		    ,A.ROUTE_TYPE
+		    ,A.ROUTE_DIRECTION
+		    ,C.STOP_NAME
+		    ,NVL(TO_CHAR(C.SERVICE_ID), 'ID 없음') SERVICE_ID
+		    ,C.STOP_ID
+		    ,C.LNG
+		    ,C.LAT
+		    ,B.STOP_ORD
+			,B.TURN_ORD
+		FROM BUSROUTE A, M_BUSROUTE_STOP B, BUSSTOP C
+		WHERE A.ROUTE_ID = #{route_id}
+		   AND A.ROUTE_ID = B.ROUTE_ID
+		   AND ROUTE_STATUS = 1
+		   AND A.ROUTESECT_GROUP_ID = B.ROUTESECT_GROUP_ID
+		   AND B.STOP_ID = C.STOP_ID 
+		   AND C.USE_FLAG = 1
+		ORDER BY ROUTE_ID, STOP_ORD
+	</select>
+	
+	<!-- 노선 시간표 검색 -->
+	<select id="selectBusTimeTableList" parameterType="hashmap" resultType="egovMap">
+		SELECT 
+			ROUTE_ID
+			,ORD
+			<!-- ,TRIM(DEPARTURE_TIME) AS DEPARTURE_TIME -->
+			,SUBSTR(TRIM(DEPARTURE_TIME),0,2)||':'||SUBSTR(TRIM(DEPARTURE_TIME),3,2) AS DEPARTURE_TIME
+            ,ROW_NUMBER() OVER(ORDER BY ORD) AS RN
+		FROM BUS_TIME_TABLE
+		WHERE ROUTE_ID = #{routeId} 
+			<choose>
+				<when test="dayGbn != null and dayGbn.equalsIgnoreCase('1')">
+					AND WEEK_OPERATION_FLAG = 1
+				</when>
+				<otherwise>
+					AND (SAT_OPERATION_FLAG = 1 OR HOLIDY_OPERATION_FLAG = 1 OR VACATION_OPERATION_FLAG = 1)
+				</otherwise>
+			</choose>
+		ORDER BY ORD
+	</select>
+	
+	<!-- 운행시간표 상세 -->
+	<select id="selectTimeTableListDetail" parameterType="hashmap" resultType="egovMap">
+		SELECT 
+			A.ROUTE_ID
+     		,B.ROUTE_NAME
+     		,B.ROUTE_DIRECTION
+			,B.ROUTE_EXPLAIN
+      		,SUBSTR(DEPARTURE_TIME, 0,2)||':'||SUBSTR(DEPARTURE_TIME, 3,2) AS DT_TIME
+      		,A.WEEK_OPERATION_FLAG AS WEEK_FLAG
+      		,A.SAT_OPERATION_FLAG  AS SAT_FLAG
+      		,A.HOLIDY_OPERATION_FLAG AS HOLIDY_FLAG
+      		,A.VACATION_OPERATION_FLAG AS VACATION_FLAG
+      		,A.ORD
+  		FROM 
+  			BUS_TIME_TABLE A, BUSROUTE B
+		WHERE 
+			A.ROUTE_ID = B.ROUTE_ID
+		    AND B.ROUTE_NAME = #{route_name}
+		    <choose>
+		    	<when test="route_direction != null and route_direction.equalsIgnoreCase('1')">
+		        	AND B.ROUTE_DIRECTION IN ('1', '3')
+		    	</when>
+		    	<otherwise>
+		    		AND B.ROUTE_DIRECTION IN ('2')
+		    	</otherwise>
+		    </choose>
+    	ORDER BY DEPARTURE_TIME, ORD
+	</select>	
+</mapper>

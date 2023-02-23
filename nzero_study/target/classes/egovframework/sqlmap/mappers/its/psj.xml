@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="psj">
+    <select id="selectCamListAjax" resultType="egovMap">
+        SELECT *
+        FROM CROSS_CAMERA A
+                 JOIN V_CROSS_CAMERA_STATUS_CUR B ON A.CROSS_CAM_ID = B.CROSS_CAM_ID
+        ;
+    </select>
+
+    <select id="selectCamStatListAjax" resultType="egovMap">
+        SELECT * FROM V_CROSS_CAMERA_STATUS_CUR;
+    </select>
+
+    <select id="selectVmsListAjax" resultType="egovMap">
+        SELECT *
+        FROM VMS A
+                 JOIN V_VMS_STATUS_CUR B ON A.VMSID = B.VMS_ID ;
+    </select>
+
+    <select id="selectVmsStatListAjax" resultType="egovMap">
+        SELECT * FROM V_VMS_STATUS_CUR;
+    </select>
+</mapper>

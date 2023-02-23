@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bjw">
+
+    <select id="selectVMS" resultType="egovMap">
+        SELECT *
+        FROM VMS A;
+    </select>
+
+    <select id="selectCCTV" resultType="egovMap">
+        SELECT *
+        FROM CROSS_CAMERA A;
+    </select>
+</mapper>

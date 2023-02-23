@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="gnpsj">
+    <select id="selectEmergencyVeh" resultType="egovMap">
+        SELECT SERVICE_ID, START_DATE, END_DATE, REG_DATE, UPD_DATE, TIMEOVER_YN, TO_CHAR(REG_DATE, 'YYYY-MM-DD') AS REG_DATE_STR
+        FROM EMERGENCY_VEH
+        ORDER BY REG_DATE DESC
+        ;
+    </select>
+
+    <select id="selectEmergencyLocAjax" parameterType="hashmap" resultType="egovMap">
+        SELECT SERVICE_ID, DEVICE_ID, SEQ, LAT, LON, REG_DATE, TO_CHAR(REG_DATE, 'HH:mi:ss') AS REG_TIME
+        FROM EMERGENCY_VEH_LOC
+        WHERE SERVICE_ID = #{serviceId}
+        ORDER BY SEQ asc
+        ;
+    </select>
+
+    <select id="selectEmergencyRouteAjax" parameterType="hashmap" resultType="egovMap">
+        SELECT *
+        FROM EMERGENCY_VEH_ROUTE
+        WHERE SERVICE_ID = #{serviceId}
+        ORDER BY SEQ asc
+        ;
+    </select>
+
+</mapper>
