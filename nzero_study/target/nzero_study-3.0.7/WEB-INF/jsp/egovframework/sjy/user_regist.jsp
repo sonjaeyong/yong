@@ -53,30 +53,22 @@ $(document).ready(function(){
 	 });
 	console.log(userArr);
 });
-var flag = false;
 function regist(){
-	$("#registForm input[type='text']").each(function(i){
-		if(!$(this).val()){
-			alert("모든 항목을 입력해주세요!");
-			flag = false;
-			return false;
-		}
-		else{flag = true;}
-	});
 	id = $("input[name='id']").val();
 	if(userArr.includes(id)){
 		alert("중복된 ID입니다!!");
-		flag = false;
 		return false;
 	}
 	else{
-		if(!flag){return;}
 		if(!confirm("가입하시겠습니까?")){
 			return false;
 		}
-		alert("회원가입 완료!");
-		$("#registForm").attr("action", "/sjy/registId.do").submit();
 	}
+	alert("회원가입 완료!");
+	$("#registForm").attr("action", "/sjy/registId.do").submit();
+}
+function cancel(){
+	location.replace("/sjy/login.do");
 }
 </script>
 <body>
@@ -101,7 +93,7 @@ function regist(){
    <input type="text" id="주소" name="address" placeholder="주소">
    <input type="text" id="이메일" name="email" placeholder="이메일">
    <button type="button" onclick="regist(); return false;">회원가입</button>
-   <button type="button" onclick="location.replace('/sjy/login.do');">취소</button>
+   <button type="button" onclick="cancel(); return false;">취소</button>
   </form>
  </div>
 </body>

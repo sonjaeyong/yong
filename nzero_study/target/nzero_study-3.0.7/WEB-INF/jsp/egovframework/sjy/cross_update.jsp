@@ -108,7 +108,7 @@ var id;
  		basic.style.color = "#000000";
  		basic.style.fontWeight = "normal";
  	}
- 	trColor.style.color = "#147814";
+ 	trColor.style.color = "#FF8200";
  	trColor.style.fontWeight = "bold";
  	basic = trColor;
  }

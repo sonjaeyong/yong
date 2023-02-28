@@ -11,7 +11,7 @@
 <head>
 <meta charset="UTF-8">
 <script src="../js/jquery-1.12.3.min.js"></script>
-<title>교차로삭제</title>
+<title>교차로등록</title>
 <style>
  #listForm{
  	width:1500px;
@@ -20,20 +20,13 @@
  	text-align:center;
  	margin-bottom:10px;
  }
- #listTable, th, td{
- 	border-collapse:collapse;
- }
+ #listTable, th, td{border-collapse:collapse;}
  #listTable{
  	width:100%;
  	text-align:center;
  	border-left:0;
  	border-right:0;
  	border-width:2px;
- }
- #listTable caption{
- 	font-size:20px;
- 	font-weight:bold;
- 	padding: 0 0 10px 0;
  }
  #listTable th{
  	border-left:0;
@@ -42,70 +35,104 @@
  	border-width:2px;
  	background-color: #E2E2E2;
  }
+ #listTable caption{
+ 	font-size:20px;
+ 	font-weight:bold;
+ 	padding: 0 0 10px 0;
+ }
+ #insertForm{
+ 	width:400px;
+ 	margin-left:auto;
+ 	margin-right:auto;
+ 	text-align:center;
+ 	background-color:#7DA5E1;
+ 	padding:20px;
+ }
+ #insertForm input{
+ 	width:250px;
+ 	height:30px;
+ 	border:none;
+ 	border-radius:8px;
+ 	margin-bottom:10px;
+ }
  #buttonPos{
+ 	width:300px;
+ 	margin-left:auto;
+ 	margin-right:auto;
  	text-align:center;
  }
  button{
- 	width:100px;
+ 	width:255px;
  	border:none;
- 	height:40px;
- 	background-color:#CD7A7A;
+ 	height:30px;
+ 	background-color:#1478CD;
  	color:white;
  	font-size:15px;
  	border-radius:8px;
+ 	margin-bottom:10px;
  	font-weight:bold;
  	cursor:pointer;
  }
 </style>
 </head>
 <script type="text/javascript">
-$(document).ready(function(){
-	$("#chkAll").change(function(){
-		if($(this).is(":checked")){
-			$("input[name='chkYn']").prop("checked", true);
-		}
-		else{
-			$("input[name='chkYn']").prop("checked", false);
-		}
-	});
-});
 //페이징
 function paging(num, tab){
 	if(num){
 		$("#pageNo").val(num);
 	}
-	$("#listForm").attr("action", "/sjy/crossDelete.do").submit();
+	$("#listForm").attr("action", "/sjy/crossRegist.do").submit();
 }
-function deleteList(){
-	var checkArr = [];
-	$("input[name='chkYn']:checked").each(function(i, v){
-		checkArr.push($(this).attr("id"));
-	});
-	if(checkArr.length == 0){
-		alert("체크된 교차로가 없습니다!");
-		return false;
-	}
-	else{
-		if(!confirm("삭제 대상: [ "+checkArr+" "+"] <== 맞습니까?")){
-			return false;
+function insertBtn(){
+	var insertid = $("#insertForm input[name='insertId']").val();
+	console.log(insertid);
+	var data = {
+			"insertid" : insertid
+	};
+	var flag = false;
+	$.ajax({
+		url : "/sjy/crossCheck.do",
+		dataType : "json",
+		type : "POST",
+		data : JSON.stringify(data),
+		contentType : "application/json",
+		success : function(result){
+			if(result == null){
+				$("#insertForm input[type='text']").each(function(i){
+					if(!$(this).val()){
+						alert("모든 칸을 입력해주세요!");
+						flag = false;
+						return false;
+					}
+					else{flag = true;}
+				});
+				if(!flag){return;}
+				if(!confirm("등록하시겠습니까?")){
+					return false;
+				}
+				$("#insertForm").attr("action", "/sjy/crossInsert.do").submit();
+			}
+			else{
+				alert("중복된 ID입니다!!");
+				flag = false;
+				return false;
+			}
+		},
+		error:function(request, status, error){
+			alert("code:"+request.status+"\n"+"message:"+request.responseText+"\n"+"error:"+error);
 		}
-	}
-	$("#listForm").attr("action", "/sjy/crossFormDelete.do").submit();
+	})
 }
 </script>
 <body>
- <div id="formPos">
+ 
+ <div>
   <form id="listForm" name="listForm" method="post">
  <input type="hidden" name="hiddenNm" />
   <table border=1 id="listTable">
   <caption>교차로목록</caption>
    <thead>
     <tr>
-     <th>
-      <div id="checkPos">
-       <input type="checkbox" id="chkAll"/>
-      </div>
-     </th>
      <th>ID</th>
      <th>NAME</th>
      <th>NUMBER</th>
@@ -117,10 +144,6 @@ function deleteList(){
    <tbody id="crossVal">
     <c:forEach items="${result }" var="rs" varStatus="status">
      <tr>
-      <td>
-       <input type="checkbox" id="<c:out value='${rs.crossId }'/>" name="chkYn"
-       value="<c:out value='${rs.crossId }'/>"/>
-      </td>
       <td>
        <input type="hidden" id="<c:out value='${rs.crossId }'/>" name="ckId"
        value="<c:out value='${rs.crossId }'/>" />
@@ -163,9 +186,20 @@ function deleteList(){
    </c:if>
   </form>
  </div>
- <div id="buttonPos">
-  <button type="button" onclick="deleteList(); return false;">삭제</button>
-  <button type="button" onclick="location.replace('/sjy/index.do');">닫기</button>
+
+ <div id="formPos">
+  <form id="insertForm" name="insertForm" method="post">
+   <input type="text" id="아이디" name="insertId" placeholder="아이디"/>
+   <input type="text" id="이름" name="insertNm" placeholder="이름"/>
+   <input type="text" id="번호" name="insertNo" placeholder="번호"/>
+   <input type="text" id="X좌표" name="insertX" placeholder="X좌표"/>
+   <input type="text" id="Y좌표" name="insertY" placeholder="Y좌표"/>
+   <input type="text" id="사용여부" name="insertYn" placeholder="사용여부"/>
+   <div id="buttonPos">
+    <button type="button" onclick="insertBtn(); return false;">등록</button>
+    <button type="button" onclick="location.replace('/sjy/index.do');">닫기</button>
+   </div>
+  </form>
  </div>
 </body>
 </html>

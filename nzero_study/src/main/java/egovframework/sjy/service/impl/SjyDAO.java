@@ -41,6 +41,10 @@ public class SjyDAO extends EgovAbstractMapper {
 		return selectList("sjy.clickList", data);
 	}
 	
+	public List<Map<String, Object>> crossCheck(Map<String, Object> data) {
+		return selectList("sjy.crossCheck", data);
+	}
+	
 	public void crossInsert(Map<String, Object> params) {
 		insert("sjy.crossInsert", params);
 	}

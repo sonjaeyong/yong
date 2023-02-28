@@ -64,6 +64,11 @@ public class SjyServiceImpl extends EgovAbstractServiceImpl implements SjyServic
 	}
 	
 	@Override
+	public List<Map<String, Object>> crossCheck(Map<String, Object> data) {
+		return sjyDAO.crossCheck(data);
+	}
+	
+	@Override
 	public void crossInsert(Map<String, Object> params) {
 		sjyDAO.crossInsert(params);
 	}

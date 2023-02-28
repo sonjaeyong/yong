@@ -163,6 +163,14 @@ public class SjyController {
     	List<Map<String, Object>> result = sjyService.clickList(data);
     	return result;
     }
+    //교차로 ID 중복확인
+    @ResponseBody
+    @RequestMapping(value = "/crossCheck.do", method = RequestMethod.POST)
+    public List<Map<String, Object>> crossCheck(@RequestBody Map<String, Object> data, ModelMap model,
+    		HttpServletRequest request) throws IOException, SQLException, RuntimeException {
+    	List<Map<String, Object>> result = sjyService.crossCheck(data);
+    	return result;
+    }
     //교차로등록 쿼리실행 후 새로고침
     @RequestMapping(value = "/crossInsert.do")
     public Object crossInsert(@RequestParam Map<String, Object> params,ModelMap model,

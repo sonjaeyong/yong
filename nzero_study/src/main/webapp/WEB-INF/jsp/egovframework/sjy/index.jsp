@@ -26,8 +26,14 @@
 	height: 64px;
 	transform:translateY(200%);
 }
- #crossVal td{
- 	cursor : pointer;
+ #crossVal td{cursor : pointer; border-bottom:1px solid black;
+ border-right: none; border-top:none; border-left: none;}
+ #crossTitle th{
+ 	border:none;
+ 	border-radius:7px;
+ 	color: white;
+ 	background-color: #FF7F50;
+ 	box-shadow: inset 0 0 12px 12px #FFAD7E;
  }
  #listWrap{
  	float: left;
@@ -38,17 +44,21 @@
  	width:370px;
  	height:420px;
  }
- #listWrap #listForm > table{
+ #listTable {
  	width:100%;
  	height:100%;
+ 	border-left:none;
+ 	border-right:none;
+ 	border-top:none;
+ 	border-width:3px;
  	text-align: center;
+ }
+ #listTable, th, td {
+ 	border-collapse:collapse;
  }
  #crossVal{
  	font-size: 17px;
  	text-align: center;
- }
- #crossVal > td{
- 	width: 200px;
  }
  #resultWrap{
  	width:1020px;
@@ -57,9 +67,20 @@
  	text-align: center;
  	margin-bottom: 7px;
  }
- #resultWrap > table{
+ #resTable{
  	width: 100%;
  	text-align:center;
+ 	border-collapse:collapse;
+ 	border-left:none;
+ 	border-right:none;
+ 	border-width:2px;
+ }
+ #resTitle th{border-left:none; border-right:none; border-top:none;
+ border-width:2px; background-color: #E2E2E2;}
+ #resTable caption{
+ 	font-size:18px;
+ 	font-weight:bold;
+ 	padding:0 0 10px 0;
  }
  #cookiePos {
  	float: right;
@@ -93,8 +114,8 @@
  	font-size: 18px;
  	font-weight: bold;
  	color: white;
- 	background-color: #ff521e;
- 	padding: 5px 10px 5px 10px;
+ 	background-color: #FF8C0A;
+ 	padding: 6px 12px 6px 12px;
  	margin-right: 5px;
  	display: inline-block;
  	border-radius: 8px;
@@ -213,9 +234,12 @@ var deleteCookie = function(name){
 };
 var basic = 0;
 function clickTr(trColor){
-	if(basic)
+	if(basic){
 		basic.style.color = "#000000";
-	trColor.style.color = "orange";
+		basic.style.fontWeight = "normal";
+	}
+	trColor.style.color = "#FF8200";
+	trColor.style.fontWeight = "bold";
 	basic = trColor;
 }
 //페이징
@@ -223,6 +247,7 @@ function paging(num, tab){
 	if(num){
 		$("#pageNo").val(num);
 	}
+	$("input[name='hiddenNm']").val("");
 	$("#listForm").attr("action", "/sjy/index.do").submit();
 }
 //로그아웃
@@ -253,8 +278,8 @@ function deleteInfo(){
  <div id="listWrap">
  <form id="listForm" name="listForm" method="post">
  <input type="hidden" name="hiddenNm" />
-  <table border=1>
-   <thead>
+  <table id="listTable" border=1>
+   <thead id="crossTitle">
     <tr>
      <th colspan="3"><h2>교차로목록</h2></th>
     </tr>
@@ -305,7 +330,8 @@ function deleteInfo(){
  </div>
  
  <div id="resultWrap">
-  <table border=1>
+  <table border=1 id="resTable">
+  <caption>상세정보</caption>
   <colgroup>
   <col>
   <col>
@@ -314,9 +340,7 @@ function deleteInfo(){
   <col>
   <col width="100">
   </colgroup>
-   <tr>
-    <th colspan="6">상세정보</th>
-   </tr>
+   <thead id="resTitle">
    <tr>
     <th>ID</th>
     <th>NAME</th>
@@ -325,6 +349,7 @@ function deleteInfo(){
     <th>GIS_Y</th>
     <th>USE</th>
    </tr>
+   </thead>
    <tbody id="resultList">
     <tr>
      <td colspan="6">교차로를 클릭해주세요!</td>

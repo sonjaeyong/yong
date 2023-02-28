@@ -13,6 +13,7 @@ import javax.transaction.Transactional;
 
 @Transactional
 public interface SjyService {
+	
 	List<Map<String, Object>> crossList(Map<String, Object> params);
 	
 	List<Map<String, Object>> userList(Map<String, Object> params);
@@ -28,6 +29,8 @@ public interface SjyService {
 	Integer deleteId(Map<String, Object> params, HttpServletRequest request) throws Exception;
 	
 	List<Map<String, Object>> clickList(Map<String, Object> data);
+	
+	List<Map<String, Object>> crossCheck(Map<String, Object> data);
 	
 	void crossInsert(Map<String, Object> params);
 	

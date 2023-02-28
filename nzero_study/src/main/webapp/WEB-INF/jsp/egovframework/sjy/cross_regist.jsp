@@ -20,9 +20,25 @@
  	text-align:center;
  	margin-bottom:10px;
  }
- #listForm > table{
+ #listTable, th, td{border-collapse:collapse;}
+ #listTable{
  	width:100%;
  	text-align:center;
+ 	border-left:0;
+ 	border-right:0;
+ 	border-width:2px;
+ }
+ #listTable th{
+ 	border-left:0;
+ 	border-right:0;
+ 	border-top:0;
+ 	border-width:2px;
+ 	background-color: #E2E2E2;
+ }
+ #listTable caption{
+ 	font-size:20px;
+ 	font-weight:bold;
+ 	padding: 0 0 10px 0;
  }
  #insertForm{
  	width:400px;
@@ -60,23 +76,6 @@
 </style>
 </head>
 <script type="text/javascript">
-$(document).ready(function(){
-	var flag = false;
-	$("#insertBtn").click(function(){
-		if(!$("input[type='text']").val()){
-			alert("입력하지 않은 항목이 있습니다!");
-			flag = false;
-			return false;
-		}
-		if(!confirm("등록하시겠습니까?")){
-			return false;
-		}
-		$("#insertForm").attr("action", "/sjy/crossInsert.do").submit();
-	});
-	$("#cancelBtn").click(function(){
-		location.replace("/sjy/index.do");
-	});
-});
 //페이징
 function paging(num, tab){
 	if(num){
@@ -84,16 +83,50 @@ function paging(num, tab){
 	}
 	$("#listForm").attr("action", "/sjy/crossRegist.do").submit();
 }
+function insertBtn(){
+	var insertid = $("#insertForm input[name='insertId']").val();
+	var flag = false;
+	$("#insertForm input[type='text']").each(function(i){
+		if(!$(this).val()){
+			alert("모든 항목을 입력해주세요!");
+			flag = false;
+			return false;
+		}
+		else{flag = true;}
+	});
+	var data = {
+			insertid : insertid
+	};
+	$.ajax({
+		url : "/sjy/crossCheck.do",
+		dataType : "json",
+		type : "POST",
+		async : false,
+		data : JSON.stringify(data),
+		contentType : "application/json",
+		success : function(result){
+			if(result[0] != null){
+				alert("이미 존재하는 ID입니다!");
+				flag = false;
+				return false;
+			}
+		}
+	})
+	if(!flag){return;}
+	if(!confirm("등록하시겠습니까?")){
+		return false;
+	}
+	$("#insertForm").attr("action", "/sjy/crossInsert.do").submit();
+}
 </script>
 <body>
+ 
  <div>
   <form id="listForm" name="listForm" method="post">
  <input type="hidden" name="hiddenNm" />
-  <table border=1>
+  <table border=1 id="listTable">
+  <caption>교차로목록</caption>
    <thead>
-    <tr>
-     <th colspan="6"><h2>교차로목록</h2></th>
-    </tr>
     <tr>
      <th>ID</th>
      <th>NAME</th>
@@ -158,8 +191,8 @@ function paging(num, tab){
    <input type="text" id="Y좌표" name="insertY" placeholder="Y좌표"/>
    <input type="text" id="사용여부" name="insertYn" placeholder="사용여부"/>
    <div id="buttonPos">
-    <button type="button" id="insertBtn">등록</button>
-    <button type="button" id="cancelBtn">닫기</button>
+    <button type="button" onclick="insertBtn(); return false;">등록</button>
+    <button type="button" onclick="location.replace('/sjy/index.do');">닫기</button>
    </div>
   </form>
  </div>
