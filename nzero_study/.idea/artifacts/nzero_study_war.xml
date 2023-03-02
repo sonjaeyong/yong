@@ -1,0 +1,14 @@
+<component name="ArtifactManager">
+  <artifact type="war" name="nzero_study:war">
+    <output-path>$PROJECT_DIR$/target</output-path>
+    <properties id="maven-jee-properties">
+      <options>
+        <module>nzero_study</module>
+        <packaging>war</packaging>
+      </options>
+    </properties>
+    <root id="archive" name="nzero_study-3.0.7.war">
+      <element id="artifact" artifact-name="nzero_study:war exploded" />
+    </root>
+  </artifact>
+</component>

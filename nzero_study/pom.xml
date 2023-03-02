@@ -34,7 +34,7 @@
 		</repository>
 		<repository>
 			<id>egovframe2</id>
-			<url>http://maven.egovframe.kr:8080/maven/</url>
+			<url>http://maven.egovframe.go.kr/maven/</url>
 			<releases>
 				<enabled>true</enabled>
 			</releases>
@@ -42,6 +42,7 @@
 				<enabled>false</enabled>
 			</snapshots>
 		</repository>
+
 	</repositories>
 
 	<dependencies>

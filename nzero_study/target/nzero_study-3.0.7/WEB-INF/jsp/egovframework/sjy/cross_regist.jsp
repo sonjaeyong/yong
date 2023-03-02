@@ -50,7 +50,7 @@
  }
  #insertForm input{
  	width:250px;
- 	height:30px;
+ 	height:35px;
  	border:none;
  	border-radius:8px;
  	margin-bottom:10px;
@@ -85,43 +85,38 @@ function paging(num, tab){
 }
 function insertBtn(){
 	var insertid = $("#insertForm input[name='insertId']").val();
-	console.log(insertid);
-	var data = {
-			"insertid" : insertid
-	};
 	var flag = false;
+	$("#insertForm input[type='text']").each(function(i){
+		if(!$(this).val()){
+			alert("모든 항목을 입력해주세요!");
+			flag = false;
+			return false;
+		}
+		else{flag = true;}
+	});
+	var data = {
+			insertid : insertid
+	};
 	$.ajax({
 		url : "/sjy/crossCheck.do",
 		dataType : "json",
 		type : "POST",
+		async : false,
 		data : JSON.stringify(data),
 		contentType : "application/json",
 		success : function(result){
-			if(result == null){
-				$("#insertForm input[type='text']").each(function(i){
-					if(!$(this).val()){
-						alert("모든 칸을 입력해주세요!");
-						flag = false;
-						return false;
-					}
-					else{flag = true;}
-				});
-				if(!flag){return;}
-				if(!confirm("등록하시겠습니까?")){
-					return false;
-				}
-				$("#insertForm").attr("action", "/sjy/crossInsert.do").submit();
-			}
-			else{
-				alert("중복된 ID입니다!!");
+			if(result[0] != null){
+				alert("이미 존재하는 ID입니다!");
 				flag = false;
 				return false;
 			}
-		},
-		error:function(request, status, error){
-			alert("code:"+request.status+"\n"+"message:"+request.responseText+"\n"+"error:"+error);
 		}
 	})
+	if(!flag){return;}
+	if(!confirm("등록하시겠습니까?")){
+		return false;
+	}
+	$("#insertForm").attr("action", "/sjy/crossInsert.do").submit();
 }
 </script>
 <body>

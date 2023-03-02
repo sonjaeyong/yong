@@ -55,7 +55,7 @@
  }
  #updateForm input{
  	width:250px;
- 	height:30px;
+ 	height:35px;
  	border:none;
  	border-radius:8px;
  	margin-bottom:10px;
@@ -108,7 +108,7 @@ var id;
  		basic.style.color = "#000000";
  		basic.style.fontWeight = "normal";
  	}
- 	trColor.style.color = "#FF8200";
+ 	trColor.style.color = "#147814";
  	trColor.style.fontWeight = "bold";
  	basic = trColor;
  }

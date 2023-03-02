@@ -50,7 +50,7 @@
  }
  #insertForm input{
  	width:250px;
- 	height:30px;
+ 	height:35px;
  	border:none;
  	border-radius:8px;
  	margin-bottom:10px;
