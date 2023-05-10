@@ -1,0 +1,130 @@
+2023-05-10 08:57:50.970  INFO 15412 --- [restartedMain] .b.s.c.OsanBisSubwayCollectorApplication : Starting OsanBisSubwayCollectorApplication using Java 11.0.18 on DESKTOP-MDB2G9O with PID 15412 (C:\Users\NZERO221126\git\yong\osan-bis-subway-collector-master\out\production\classes started by NZERO221126 in C:\Users\NZERO221126\git\yong\osan-bis-subway-collector-master)
+2023-05-10 08:57:50.981  INFO 15412 --- [restartedMain] .b.s.c.OsanBisSubwayCollectorApplication : The following 1 profile is active: "prod"
+2023-05-10 08:57:51.097  INFO 15412 --- [restartedMain] o.s.b.devtools.restart.ChangeableUrls    : The Class-Path manifest attribute in C:\Users\NZERO221126\.gradle\caches\modules-2\files-2.1\com.oracle.database.jdbc\ojdbc8\21.5.0.0\eb13f0948ca8675f71d59b5e8a1129d4c6189e7a\ojdbc8-21.5.0.0.jar referenced one or more files that do not exist: file:/C:/Users/NZERO221126/.gradle/caches/modules-2/files-2.1/com.oracle.database.jdbc/ojdbc8/21.5.0.0/eb13f0948ca8675f71d59b5e8a1129d4c6189e7a/oraclepki.jar
+2023-05-10 08:57:51.099  INFO 15412 --- [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2023-05-10 08:57:51.099  INFO 15412 --- [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2023-05-10 08:57:51.980  INFO 15412 --- [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2023-05-10 08:57:51.998  INFO 15412 --- [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 7 ms. Found 0 JPA repository interfaces.
+2023-05-10 08:57:52.305  INFO 15412 --- [restartedMain] ptablePropertiesBeanFactoryPostProcessor : Post-processing PropertySource instances
+2023-05-10 08:57:52.331  INFO 15412 --- [restartedMain] c.u.j.EncryptablePropertySourceConverter : Converting PropertySource configurationProperties [org.springframework.boot.context.properties.source.ConfigurationPropertySourcesPropertySource] to AOP Proxy
+2023-05-10 08:57:52.333  INFO 15412 --- [restartedMain] c.u.j.EncryptablePropertySourceConverter : Converting PropertySource servletConfigInitParams [org.springframework.core.env.PropertySource$StubPropertySource] to EncryptablePropertySourceWrapper
+2023-05-10 08:57:52.333  INFO 15412 --- [restartedMain] c.u.j.EncryptablePropertySourceConverter : Converting PropertySource servletContextInitParams [org.springframework.core.env.PropertySource$StubPropertySource] to EncryptablePropertySourceWrapper
+2023-05-10 08:57:52.333  INFO 15412 --- [restartedMain] c.u.j.EncryptablePropertySourceConverter : Converting PropertySource systemProperties [org.springframework.core.env.PropertiesPropertySource] to EncryptableMapPropertySourceWrapper
+2023-05-10 08:57:52.334  INFO 15412 --- [restartedMain] c.u.j.EncryptablePropertySourceConverter : Converting PropertySource systemEnvironment [org.springframework.boot.env.SystemEnvironmentPropertySourceEnvironmentPostProcessor$OriginAwareSystemEnvironmentPropertySource] to EncryptableSystemEnvironmentPropertySourceWrapper
+2023-05-10 08:57:52.334  INFO 15412 --- [restartedMain] c.u.j.EncryptablePropertySourceConverter : Converting PropertySource random [org.springframework.boot.env.RandomValuePropertySource] to EncryptablePropertySourceWrapper
+2023-05-10 08:57:52.334  INFO 15412 --- [restartedMain] c.u.j.EncryptablePropertySourceConverter : Converting PropertySource Config resource 'class path resource [application.properties]' via location 'optional:classpath:/' [org.springframework.boot.env.OriginTrackedMapPropertySource] to EncryptableMapPropertySourceWrapper
+2023-05-10 08:57:52.336  INFO 15412 --- [restartedMain] c.u.j.EncryptablePropertySourceConverter : Converting PropertySource devtools [org.springframework.core.env.MapPropertySource] to EncryptableMapPropertySourceWrapper
+2023-05-10 08:57:52.337  INFO 15412 --- [restartedMain] c.u.j.EncryptablePropertySourceConverter : Converting PropertySource class path resource [config.properties] [org.springframework.core.env.CompositePropertySource] to EncryptableEnumerablePropertySourceWrapper
+2023-05-10 08:57:52.397  INFO 15412 --- [restartedMain] c.u.j.filter.DefaultLazyPropertyFilter   : Property Filter custom Bean not found with name 'encryptablePropertyFilter'. Initializing Default Property Filter
+2023-05-10 08:57:52.547  INFO 15412 --- [restartedMain] c.u.j.r.DefaultLazyPropertyResolver      : Property Resolver custom Bean not found with name 'encryptablePropertyResolver'. Initializing Default Property Resolver
+2023-05-10 08:57:52.548  INFO 15412 --- [restartedMain] c.u.j.d.DefaultLazyPropertyDetector      : Property Detector custom Bean not found with name 'encryptablePropertyDetector'. Initializing Default Property Detector
+2023-05-10 08:57:52.854  INFO 15412 --- [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 8080 (http)
+2023-05-10 08:57:52.868  INFO 15412 --- [restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2023-05-10 08:57:52.868  INFO 15412 --- [restartedMain] org.apache.catalina.core.StandardEngine  : Starting Servlet engine: [Apache Tomcat/9.0.74]
+2023-05-10 08:57:53.002  INFO 15412 --- [restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2023-05-10 08:57:53.002  INFO 15412 --- [restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1901 ms
+2023-05-10 08:57:53.061  INFO 15412 --- [restartedMain] c.u.j.encryptor.DefaultLazyEncryptor     : Found Custom Encryptor Bean org.jasypt.encryption.pbe.PooledPBEStringEncryptor@786c4cc with name: encryptorBean
+2023-05-10 08:57:53.240  INFO 15412 --- [restartedMain] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2023-05-10 08:57:53.313  INFO 15412 --- [restartedMain] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 5.6.15.Final
+2023-05-10 08:57:53.480  INFO 15412 --- [restartedMain] o.hibernate.annotations.common.Version   : HCANN000001: Hibernate Commons Annotations {5.1.2.Final}
+2023-05-10 08:57:53.588  INFO 15412 --- [restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2023-05-10 08:57:53.698  INFO 15412 --- [restartedMain] com.zaxxer.hikari.pool.PoolBase          : HikariPool-1 - Driver does not support get/set network timeout for connections. (Receiver class com.tmax.tibero.jdbc.driver.TbConnection does not define or inherit an implementation of the resolved method abstract getNetworkTimeout()I of interface java.sql.Connection.)
+2023-05-10 08:57:53.711  INFO 15412 --- [restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2023-05-10 08:57:53.723  INFO 15412 --- [restartedMain] org.hibernate.dialect.Dialect            : HHH000400: Using dialect: org.hibernate.dialect.Oracle10gDialect
+2023-05-10 08:57:54.213  INFO 15412 --- [restartedMain] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000490: Using JtaPlatform implementation: [org.hibernate.engine.transaction.jta.platform.internal.NoJtaPlatform]
+2023-05-10 08:57:54.222  INFO 15412 --- [restartedMain] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2023-05-10 08:57:54.687  INFO 15412 --- [restartedMain] o.s.b.a.w.s.WelcomePageHandlerMapping    : Adding welcome page template: index
+2023-05-10 08:57:54.860  INFO 15412 --- [restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
+2023-05-10 08:57:54.913  INFO 15412 --- [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 8080 (http) with context path ''
+2023-05-10 08:57:54.933  INFO 15412 --- [restartedMain] .b.s.c.OsanBisSubwayCollectorApplication : Started OsanBisSubwayCollectorApplication in 4.795 seconds (JVM running for 6.751)
+2023-05-10 08:58:00.005  INFO 15412 --- [scheduling-1] k.n.o.b.s.c.c.StationController          : ----- 1호선 지하철 실시간 위치정보 호출 시작 -----
+2023-05-10 08:58:00.614  INFO 15412 --- [scheduling-1] k.n.o.b.s.c.c.StationController          : ----- 호출종료 -----
+2023-05-10 08:58:00.620  INFO 15412 --- [scheduling-1] k.n.o.b.s.c.c.CollectorController        : -----오산역 지하철 도착정보 API 호출 시작 -----
+2023-05-10 08:58:00.743  INFO 15412 --- [scheduling-1] k.n.o.b.s.c.c.CollectorController        : ----- 호출 종료 -----
+2023-05-10 08:58:10.015  INFO 15412 --- [scheduling-1] k.n.o.b.s.c.c.CollectorController        : -----오산역 지하철 도착정보 API 호출 시작 -----
+2023-05-10 08:58:10.172  INFO 15412 --- [scheduling-1] k.n.o.b.s.c.c.CollectorController        : ----- 호출 종료 -----
+2023-05-10 08:58:20.011  INFO 15412 --- [scheduling-1] k.n.o.b.s.c.c.CollectorController        : -----오산역 지하철 도착정보 API 호출 시작 -----
+2023-05-10 08:58:20.218  INFO 15412 --- [scheduling-1] k.n.o.b.s.c.c.CollectorController        : ----- 호출 종료 -----
+2023-05-10 08:58:30.018  INFO 15412 --- [scheduling-1] k.n.o.b.s.c.c.CollectorController        : -----오산역 지하철 도착정보 API 호출 시작 -----
+2023-05-10 08:58:30.258  INFO 15412 --- [scheduling-1] k.n.o.b.s.c.c.CollectorController        : ----- 호출 종료 -----
+2023-05-10 08:58:40.051  INFO 15412 --- [scheduling-1] k.n.o.b.s.c.c.CollectorController        : -----오산역 지하철 도착정보 API 호출 시작 -----
+2023-05-10 08:58:40.207  INFO 15412 --- [scheduling-1] k.n.o.b.s.c.c.CollectorController        : ----- 호출 종료 -----
+2023-05-10 08:58:50.023  INFO 15412 --- [scheduling-1] k.n.o.b.s.c.c.CollectorController        : -----오산역 지하철 도착정보 API 호출 시작 -----
+2023-05-10 08:58:50.186  INFO 15412 --- [scheduling-1] k.n.o.b.s.c.c.CollectorController        : ----- 호출 종료 -----
+2023-05-10 08:58:52.713  INFO 15412 --- [SpringApplicationShutdownHook] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+2023-05-10 08:58:52.729  INFO 15412 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2023-05-10 08:58:52.737  INFO 15412 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
+2023-05-10 09:30:14.146  INFO 13424 --- [restartedMain] .b.s.c.OsanBisSubwayCollectorApplication : Starting OsanBisSubwayCollectorApplication using Java 11.0.18 on DESKTOP-MDB2G9O with PID 13424 (C:\Users\NZERO221126\git\yong\osan-bis-subway-collector-master\out\production\classes started by NZERO221126 in C:\Users\NZERO221126\git\yong\osan-bis-subway-collector-master)
+2023-05-10 09:30:14.148  INFO 13424 --- [restartedMain] .b.s.c.OsanBisSubwayCollectorApplication : The following 1 profile is active: "prod"
+2023-05-10 09:30:14.217  INFO 13424 --- [restartedMain] o.s.b.devtools.restart.ChangeableUrls    : The Class-Path manifest attribute in C:\Users\NZERO221126\.gradle\caches\modules-2\files-2.1\com.oracle.database.jdbc\ojdbc8\21.5.0.0\eb13f0948ca8675f71d59b5e8a1129d4c6189e7a\ojdbc8-21.5.0.0.jar referenced one or more files that do not exist: file:/C:/Users/NZERO221126/.gradle/caches/modules-2/files-2.1/com.oracle.database.jdbc/ojdbc8/21.5.0.0/eb13f0948ca8675f71d59b5e8a1129d4c6189e7a/oraclepki.jar
+2023-05-10 09:30:14.218  INFO 13424 --- [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2023-05-10 09:30:14.218  INFO 13424 --- [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2023-05-10 09:30:14.958  INFO 13424 --- [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2023-05-10 09:30:14.975  INFO 13424 --- [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 7 ms. Found 0 JPA repository interfaces.
+2023-05-10 09:30:15.265  INFO 13424 --- [restartedMain] ptablePropertiesBeanFactoryPostProcessor : Post-processing PropertySource instances
+2023-05-10 09:30:15.295  INFO 13424 --- [restartedMain] c.u.j.EncryptablePropertySourceConverter : Converting PropertySource configurationProperties [org.springframework.boot.context.properties.source.ConfigurationPropertySourcesPropertySource] to AOP Proxy
+2023-05-10 09:30:15.297  INFO 13424 --- [restartedMain] c.u.j.EncryptablePropertySourceConverter : Converting PropertySource servletConfigInitParams [org.springframework.core.env.PropertySource$StubPropertySource] to EncryptablePropertySourceWrapper
+2023-05-10 09:30:15.298  INFO 13424 --- [restartedMain] c.u.j.EncryptablePropertySourceConverter : Converting PropertySource servletContextInitParams [org.springframework.core.env.PropertySource$StubPropertySource] to EncryptablePropertySourceWrapper
+2023-05-10 09:30:15.300  INFO 13424 --- [restartedMain] c.u.j.EncryptablePropertySourceConverter : Converting PropertySource systemProperties [org.springframework.core.env.PropertiesPropertySource] to EncryptableMapPropertySourceWrapper
+2023-05-10 09:30:15.301  INFO 13424 --- [restartedMain] c.u.j.EncryptablePropertySourceConverter : Converting PropertySource systemEnvironment [org.springframework.boot.env.SystemEnvironmentPropertySourceEnvironmentPostProcessor$OriginAwareSystemEnvironmentPropertySource] to EncryptableSystemEnvironmentPropertySourceWrapper
+2023-05-10 09:30:15.301  INFO 13424 --- [restartedMain] c.u.j.EncryptablePropertySourceConverter : Converting PropertySource random [org.springframework.boot.env.RandomValuePropertySource] to EncryptablePropertySourceWrapper
+2023-05-10 09:30:15.302  INFO 13424 --- [restartedMain] c.u.j.EncryptablePropertySourceConverter : Converting PropertySource Config resource 'class path resource [application.properties]' via location 'optional:classpath:/' [org.springframework.boot.env.OriginTrackedMapPropertySource] to EncryptableMapPropertySourceWrapper
+2023-05-10 09:30:15.302  INFO 13424 --- [restartedMain] c.u.j.EncryptablePropertySourceConverter : Converting PropertySource devtools [org.springframework.core.env.MapPropertySource] to EncryptableMapPropertySourceWrapper
+2023-05-10 09:30:15.303  INFO 13424 --- [restartedMain] c.u.j.EncryptablePropertySourceConverter : Converting PropertySource class path resource [config.properties] [org.springframework.core.env.CompositePropertySource] to EncryptableEnumerablePropertySourceWrapper
+2023-05-10 09:30:15.356  INFO 13424 --- [restartedMain] c.u.j.filter.DefaultLazyPropertyFilter   : Property Filter custom Bean not found with name 'encryptablePropertyFilter'. Initializing Default Property Filter
+2023-05-10 09:30:15.515  INFO 13424 --- [restartedMain] c.u.j.r.DefaultLazyPropertyResolver      : Property Resolver custom Bean not found with name 'encryptablePropertyResolver'. Initializing Default Property Resolver
+2023-05-10 09:30:15.519  INFO 13424 --- [restartedMain] c.u.j.d.DefaultLazyPropertyDetector      : Property Detector custom Bean not found with name 'encryptablePropertyDetector'. Initializing Default Property Detector
+2023-05-10 09:30:15.861  INFO 13424 --- [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 8080 (http)
+2023-05-10 09:30:15.871  INFO 13424 --- [restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2023-05-10 09:30:15.873  INFO 13424 --- [restartedMain] org.apache.catalina.core.StandardEngine  : Starting Servlet engine: [Apache Tomcat/9.0.74]
+2023-05-10 09:30:15.978  INFO 13424 --- [restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2023-05-10 09:30:15.978  INFO 13424 --- [restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1758 ms
+2023-05-10 09:30:16.034  INFO 13424 --- [restartedMain] c.u.j.encryptor.DefaultLazyEncryptor     : Found Custom Encryptor Bean org.jasypt.encryption.pbe.PooledPBEStringEncryptor@239315cd with name: encryptorBean
+2023-05-10 09:30:16.177  INFO 13424 --- [restartedMain] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2023-05-10 09:30:16.212  INFO 13424 --- [restartedMain] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 5.6.15.Final
+2023-05-10 09:30:16.333  INFO 13424 --- [restartedMain] o.hibernate.annotations.common.Version   : HCANN000001: Hibernate Commons Annotations {5.1.2.Final}
+2023-05-10 09:30:16.422  INFO 13424 --- [restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2023-05-10 09:30:16.525  INFO 13424 --- [restartedMain] com.zaxxer.hikari.pool.PoolBase          : HikariPool-1 - Driver does not support get/set network timeout for connections. (Receiver class com.tmax.tibero.jdbc.driver.TbConnection does not define or inherit an implementation of the resolved method abstract getNetworkTimeout()I of interface java.sql.Connection.)
+2023-05-10 09:30:16.545  INFO 13424 --- [restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2023-05-10 09:30:16.564  INFO 13424 --- [restartedMain] org.hibernate.dialect.Dialect            : HHH000400: Using dialect: org.hibernate.dialect.Oracle10gDialect
+2023-05-10 09:30:17.032  INFO 13424 --- [restartedMain] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000490: Using JtaPlatform implementation: [org.hibernate.engine.transaction.jta.platform.internal.NoJtaPlatform]
+2023-05-10 09:30:17.042  INFO 13424 --- [restartedMain] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2023-05-10 09:30:17.434  INFO 13424 --- [restartedMain] o.s.b.a.w.s.WelcomePageHandlerMapping    : Adding welcome page template: index
+2023-05-10 09:30:17.600  INFO 13424 --- [restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
+2023-05-10 09:30:17.637  INFO 13424 --- [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 8080 (http) with context path ''
+2023-05-10 09:30:17.659  INFO 13424 --- [restartedMain] .b.s.c.OsanBisSubwayCollectorApplication : Started OsanBisSubwayCollectorApplication in 4.085 seconds (JVM running for 5.405)
+2023-05-10 09:31:00.089  INFO 13424 --- [scheduling-1] k.n.o.b.s.c.c.CollectorController        : -----오산역 지하철 도착정보 API 호출 시작 -----
+2023-05-10 09:31:00.360  INFO 13424 --- [scheduling-1] k.n.o.b.s.c.c.CollectorController        : ----- 호출 종료 -----
+2023-05-10 09:31:00.361  INFO 13424 --- [scheduling-1] k.n.o.b.s.c.c.StationController          : ----- 1호선 지하철 실시간 위치정보 호출 시작 -----
+2023-05-10 09:31:01.002  INFO 13424 --- [scheduling-1] k.n.o.b.s.c.c.StationController          : ----- 호출종료 -----
+2023-05-10 09:32:00.014  INFO 13424 --- [scheduling-1] k.n.o.b.s.c.c.CollectorController        : -----오산역 지하철 도착정보 API 호출 시작 -----
+2023-05-10 09:32:00.150  INFO 13424 --- [scheduling-1] k.n.o.b.s.c.c.CollectorController        : ----- 호출 종료 -----
+2023-05-10 09:32:00.152  INFO 13424 --- [scheduling-1] k.n.o.b.s.c.c.StationController          : ----- 1호선 지하철 실시간 위치정보 호출 시작 -----
+2023-05-10 09:32:00.494  INFO 13424 --- [scheduling-1] k.n.o.b.s.c.c.StationController          : ----- 호출종료 -----
+2023-05-10 09:33:00.015  INFO 13424 --- [scheduling-1] k.n.o.b.s.c.c.CollectorController        : -----오산역 지하철 도착정보 API 호출 시작 -----
+2023-05-10 09:33:00.125  INFO 13424 --- [scheduling-1] k.n.o.b.s.c.c.CollectorController        : ----- 호출 종료 -----
+2023-05-10 09:33:00.126  INFO 13424 --- [scheduling-1] k.n.o.b.s.c.c.StationController          : ----- 1호선 지하철 실시간 위치정보 호출 시작 -----
+2023-05-10 09:33:00.445  INFO 13424 --- [scheduling-1] k.n.o.b.s.c.c.StationController          : ----- 호출종료 -----
+2023-05-10 09:34:00.027  INFO 13424 --- [scheduling-1] k.n.o.b.s.c.c.CollectorController        : -----오산역 지하철 도착정보 API 호출 시작 -----
+2023-05-10 09:34:00.162  INFO 13424 --- [scheduling-1] k.n.o.b.s.c.c.CollectorController        : ----- 호출 종료 -----
+2023-05-10 09:34:00.162  INFO 13424 --- [scheduling-1] k.n.o.b.s.c.c.StationController          : ----- 1호선 지하철 실시간 위치정보 호출 시작 -----
+2023-05-10 09:34:00.483  INFO 13424 --- [scheduling-1] k.n.o.b.s.c.c.StationController          : ----- 호출종료 -----
+2023-05-10 09:35:00.003  INFO 13424 --- [scheduling-1] k.n.o.b.s.c.c.StationController          : ----- 1호선 지하철 실시간 위치정보 호출 시작 -----
+2023-05-10 09:35:00.406  INFO 13424 --- [scheduling-1] k.n.o.b.s.c.c.StationController          : ----- 호출종료 -----
+2023-05-10 09:35:00.413  INFO 13424 --- [scheduling-1] k.n.o.b.s.c.c.CollectorController        : -----오산역 지하철 도착정보 API 호출 시작 -----
+2023-05-10 09:35:00.536  INFO 13424 --- [scheduling-1] k.n.o.b.s.c.c.CollectorController        : ----- 호출 종료 -----
+2023-05-10 09:36:00.001  INFO 13424 --- [scheduling-1] k.n.o.b.s.c.c.StationController          : ----- 1호선 지하철 실시간 위치정보 호출 시작 -----
+2023-05-10 09:36:00.448  INFO 13424 --- [scheduling-1] k.n.o.b.s.c.c.StationController          : ----- 호출종료 -----
+2023-05-10 09:36:00.451  INFO 13424 --- [scheduling-1] k.n.o.b.s.c.c.CollectorController        : -----오산역 지하철 도착정보 API 호출 시작 -----
+2023-05-10 09:36:00.569  INFO 13424 --- [scheduling-1] k.n.o.b.s.c.c.CollectorController        : ----- 호출 종료 -----
+2023-05-10 09:37:00.014  INFO 13424 --- [scheduling-1] k.n.o.b.s.c.c.StationController          : ----- 1호선 지하철 실시간 위치정보 호출 시작 -----
+2023-05-10 09:37:00.447  INFO 13424 --- [scheduling-1] k.n.o.b.s.c.c.StationController          : ----- 호출종료 -----
+2023-05-10 09:37:00.452  INFO 13424 --- [scheduling-1] k.n.o.b.s.c.c.CollectorController        : -----오산역 지하철 도착정보 API 호출 시작 -----
+2023-05-10 09:37:00.568  INFO 13424 --- [scheduling-1] k.n.o.b.s.c.c.CollectorController        : ----- 호출 종료 -----
+2023-05-10 09:38:00.014  INFO 13424 --- [scheduling-1] k.n.o.b.s.c.c.StationController          : ----- 1호선 지하철 실시간 위치정보 호출 시작 -----
+2023-05-10 09:38:00.434  INFO 13424 --- [scheduling-1] k.n.o.b.s.c.c.StationController          : ----- 호출종료 -----
+2023-05-10 09:38:00.439  INFO 13424 --- [scheduling-1] k.n.o.b.s.c.c.CollectorController        : -----오산역 지하철 도착정보 API 호출 시작 -----
+2023-05-10 09:38:00.554  INFO 13424 --- [scheduling-1] k.n.o.b.s.c.c.CollectorController        : ----- 호출 종료 -----
+2023-05-10 09:38:34.985  INFO 13424 --- [SpringApplicationShutdownHook] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+2023-05-10 09:38:34.988  INFO 13424 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2023-05-10 09:38:34.992  INFO 13424 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.

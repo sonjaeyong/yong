@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.nzero.osan.bis.subway.collector.mapper.SetMapper">
+
+    <insert id="getArrivalInfo" parameterType="kr.nzero.osan.bis.subway.collector.entity.CollectorVo">
+        insert into ARRIVAL_HISTORY_DEMO(TRAIN_NO, STATION_NAME, RECEPTION_DATE, CURRENT_STATION, EXPRESS_YN,
+                                  REMAINING_STATIONS_COUNT, SUBWAY_NAME, TRAIN_LINE_NAME, UP_DOWN_LINE)
+        values (#{TRAIN_NO}, NULL, #{RECEPTION_DATE}, #{CURRENT_STATION}, #{EXPRESS_YN},
+                NULL, #{SUBWAY_NAME}, #{TRAIN_LINE_NAME}, #{UP_DOWN_LINE})
+    </insert>
+
+    <insert id="getStationInfo" parameterType="kr.nzero.osan.bis.subway.collector.entity.StationVo">
+        merge into STATION_DEMO
+        using DUAL
+        on (STATN_ID = #{statnId})
+        when matched then
+            update set SUBWAY_ID=#{subwayId}, SUB_NM=#{subNm}
+        when not matched then
+            insert (SUBWAY_ID, STATN_ID, STATN_NM, SUB_NM)
+            values (#{subwayId}, #{statnId}, #{statnNm}, #{subNm})
+    </insert>
+</mapper>

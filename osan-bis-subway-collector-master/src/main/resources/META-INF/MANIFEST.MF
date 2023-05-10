@@ -1,0 +1,4 @@
+Manifest-Version: 1.0
+Main-Class: kr.nzero.osan.bis.subway.collector.OsanBisSubwayCollectorApp
+ lication
+
